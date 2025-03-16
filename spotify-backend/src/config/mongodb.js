@@ -1,10 +1,11 @@
-import mongoose from "mongoose";
+import mongoose, { mongo } from "mongoose";
 
-const connectDB=async()=>{
+const connectDB = async () => {
+  mongoose.connection.on("connected", () => {
+    console.log("Connected to MongoDB");
+  });
 
-    mongoose.connection.on('connected',()=>{
-        console.log('Mongodb connected');
-    })
-    await mongoose.connect(`${process.env.MONGODB_URI}/spotify`)
-}
+  await mongoose.connect(`${process.env.MONGODB_URI}/spotify`);
+};
+
 export default connectDB;
