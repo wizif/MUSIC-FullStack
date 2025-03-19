@@ -4,18 +4,19 @@ import { useParams } from "react-router-dom";
 import { assets } from "../assets/frontend-assets/assets";
 import { PlayerContext } from "../context/PlayerContext";
 
-const DisplayAlbum = () => {
+const DisplayAlbum = ({album}) => {
   const { id } = useParams();
   const [albumData, setAlbumData] = useState(null);
   const { playWithId, albumsData, songsData } = useContext(PlayerContext);
 
   // Corrected useEffect
   useEffect(() => {
-    const foundAlbum = albumsData.find((item) => item._id === id);
-    if (foundAlbum) {
-      setAlbumData(foundAlbum);
-    }
-  }, [albumsData, id]); // Added dependencies
+   albumsData.map((item)=>{
+    if(item.id === id){
+      setAlbumData(item);
+   }
+  })
+},[])
 
   return albumData ? (
     <>
@@ -55,7 +56,7 @@ const DisplayAlbum = () => {
         .filter((item) => item.album === albumData.name)
         .map((item, index) => (
           <div
-            onClick={() => playWithId(item.id)}
+            onClick={() => playWithId(item._id)}
             key={index}
             className="grid grid-cols-3 sm:grid-cols-4 gap-2 p-2 items-center text-[#a7a7a7] hover:bg-[#ffffff2b] cursor-pointer"
           >

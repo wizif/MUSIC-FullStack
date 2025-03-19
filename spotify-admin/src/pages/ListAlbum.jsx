@@ -47,6 +47,7 @@ const ListAlbum = () => {
       </div>
       {data && data.length > 0 ? (
         data.map((item, index) => (
+          
           <div
             key={index}
             className="rounded-md mt-1 grid grid-cols-[1fr_1fr_1fr] sm:grid-cols-[0.5fr_1fr_2fr_1fr_0.5fr] items-center gap-2.5 p-3 border border-gray-400 text-sm mr-5"

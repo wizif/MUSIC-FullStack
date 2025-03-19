@@ -9,9 +9,9 @@ const PlayerContextProvider = ({ children }) => {
   const seekBar = useRef(null);
   const url = "http://localhost:4000"; // Backend API URL
 
-  const [allSongs, setAllSongs] = useState([]);
+  const [songsData, setSongsData] = useState([]); // ✅ Fixed: Changed from allSongs to songsData
   const [albumsData, setAlbumsData] = useState([]);
-  const [track, setTrack] = useState(null);
+  const [track, setTrack] = useState(songsData[0]);
   const [playStatus, setPlayStatus] = useState(false);
   const [time, setTime] = useState({
     currentTime: { second: 0, minute: 0 },
@@ -35,47 +35,41 @@ const PlayerContextProvider = ({ children }) => {
   };
 
   // ✅ Play song by ID
-  const playWithId = (id) => {
-    const song = allSongs.find((item) => item._id === id);
-    if (song) {
-      setTrack(song);
-      setTimeout(() => {
-        if (audioRef.current) {
-          audioRef.current.play();
-          setPlayStatus(true);
-        }
-      }, 100);
-    }
-  };
+  const playWithId =async (id) => {
+    await songsData.map((item)=>{
+      if(id===item._id){
+        setTrack(item);
+      }
+    })
+    await audioRef.current.play();
+    setPlayStatus(true);
+  }
+    
 
   // ✅ Play previous song
-  const previous = () => {
-    if (!track) return;
-    const index = allSongs.findIndex((item) => item._id === track._id);
-    if (index > 0) {
-      setTrack(allSongs[index - 1]);
-      setTimeout(() => {
-        if (audioRef.current) {
-          audioRef.current.play();
-          setPlayStatus(true);
-        }
-      }, 100);
-    }
+  const previous = async() => {
+    songsData.map(async(item,index)=>{
+
+      if(track._id===item._id && index>0){
+        await setTrack(songsData[index-1]);
+        await audioRef.current.play();
+        setPlayStatus(true);
+      }
+      
+    })
   };
 
   // ✅ Play next song
-  const next = () => {
-    if (!track) return;
-    const index = allSongs.findIndex((item) => item._id === track._id);
-    if (index < allSongs.length - 1) {
-      setTrack(allSongs[index + 1]);
-      setTimeout(() => {
-        if (audioRef.current) {
-          audioRef.current.play();
-          setPlayStatus(true);
-        }
-      }, 100);
-    }
+  const next = async() => {
+    songsData.map(async(item,index)=>{
+
+      if(track._id===item._id && index>0){
+        await setTrack(songsData[index+1]);
+        await audioRef.current.play();
+        setPlayStatus(true);
+      }
+      
+    })
   };
 
   // ✅ Seek song
@@ -91,7 +85,7 @@ const PlayerContextProvider = ({ children }) => {
   const getSongsData = async () => {
     try {
       const response = await axios.get(`${url}/api/song/list`);
-      setAllSongs(response.data.songs);
+      setSongsData(response.data.songs); // ✅ Fixed: Changed from setAllSongs to setSongsData
       if (response.data.songs.length > 0) {
         setTrack(response.data.songs[0]);
       }
@@ -163,7 +157,7 @@ const PlayerContextProvider = ({ children }) => {
     previous,
     next,
     seekSong,
-    allSongs,
+    songsData, // ✅ Fixed: Changed from allSongs to songsData
     albumsData,
   };
 
