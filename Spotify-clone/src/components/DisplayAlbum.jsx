@@ -9,20 +9,31 @@ const DisplayAlbum = ({album}) => {
   const [albumData, setAlbumData] = useState(null);
   const { playWithId, albumsData, songsData } = useContext(PlayerContext);
 
-  // Corrected useEffect
   useEffect(() => {
-   albumsData.map((item)=>{
-    if(item.id === id){
-      setAlbumData(item);
-   }
-  })
-},[])
+    const foundAlbum = albumsData.find(item => item.id === id);
+    if (foundAlbum) {
+      setAlbumData(foundAlbum);
+    }
+  }, [albumsData, id]);
 
-  return albumData ? (
+  const handleImageError = (e) => {
+    e.target.style.display = 'none';
+  };
+
+  if (!albumData) {
+    return <div className="text-white">Loading...</div>;
+  }
+
+  return (
     <>
       <Navbar />
       <div className="mt-10 flex gap-8 flex-col md:flex-row md:items-end">
-        <img className="w-48 rounded" src={albumData.image} alt="" />
+        <img 
+          className="w-48 rounded" 
+          src={albumData.image || null} 
+          alt={albumData.name}
+          onError={handleImageError}
+        />
         <div className="flex flex-col">
           <p>PLAYLIST</p>
           <h2 className="text-5xl font-bold mb-4 md:text-7xl">
@@ -32,8 +43,9 @@ const DisplayAlbum = ({album}) => {
           <p className="mt-1">
             <img
               className="inline-block w-5"
-              src={assets.spotify_logo}
+              src={assets.spotify_logo || null}
               alt="Spotify Logo"
+              onError={handleImageError}
             />
             <b>Spotify</b>. 1,323,245 likes . <b>50 songs</b>
             about 2hr 30 min
@@ -47,11 +59,15 @@ const DisplayAlbum = ({album}) => {
         </p>
         <p>Album</p>
         <p className="hidden sm:block">Date added</p>
-        <img className="m-auto w-4" src={assets.clock_icon} alt="Clock Icon" />
+        <img 
+          className="m-auto w-4" 
+          src={assets.clock_icon || null} 
+          alt="Clock Icon"
+          onError={handleImageError}
+        />
       </div>
       <hr />
 
-      {/* Corrected map function */}
       {songsData
         .filter((item) => item.album === albumData.name)
         .map((item, index) => (
@@ -62,7 +78,12 @@ const DisplayAlbum = ({album}) => {
           >
             <p className="text-white">
               <b className="mr-4 text-[#a7a7a7]">{index + 1}</b>
-              <img className="inline w-10 mr-5" src={item.image} alt={item.name} />
+              <img 
+                className="inline w-10 mr-5" 
+                src={item.image || null} 
+                alt={item.name}
+                onError={handleImageError}
+              />
               {item.name}
             </p>
             <p className="text-[15px]">{albumData.name}</p>
@@ -71,7 +92,7 @@ const DisplayAlbum = ({album}) => {
           </div>
         ))}
     </>
-  ) : null;
+  );
 };
 
 export default DisplayAlbum;

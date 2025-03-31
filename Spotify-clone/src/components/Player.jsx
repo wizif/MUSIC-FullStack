@@ -1,6 +1,7 @@
 import React, { useContext } from "react";
 import { assets } from "../assets/frontend-assets/assets";
 import { PlayerContext } from "../context/PlayerContext";
+
 const Player = () => {
   const {
     track,
@@ -11,12 +12,23 @@ const Player = () => {
     pause,
     time,
     previous,
-    next,seekSong
+    next,
+    seekSong
   } = useContext(PlayerContext);
+
+  const handleImageError = (e) => {
+    e.target.style.display = 'none';
+  };
+
   return track ? (
     <div className="h-[10%] bg-black flex justify-between items-center text-white px-4">
       <div className="hidden lg:flex items-center gap-4">
-        <img className="w-12" src={track.image} alt="" />
+        <img 
+          className="w-12" 
+          src={track.image || null} 
+          alt={track.name || "Track cover"}
+          onError={handleImageError}
+        />
         <div>
           <p>{track.name}</p>
           <p>{track.desc.slice(0, 12)}</p>
@@ -26,35 +38,55 @@ const Player = () => {
         <div className="flex gap-4">
           <img 
             className="w-4 cursor-pointer"
-            src={assets.shuffle_icon}
-            alt=""
+            src={assets.shuffle_icon || null}
+            alt="Shuffle"
+            onError={handleImageError}
           />
-          <img onClick={previous} className="w-4 cursor-pointer" src={assets.prev_icon} alt="" />
+          <img 
+            onClick={previous} 
+            className="w-4 cursor-pointer" 
+            src={assets.prev_icon || null} 
+            alt="Previous track"
+            onError={handleImageError}
+          />
           {playStatus ? (
             <img
               onClick={pause}
               className="w-4 cursor-pointer"
-              src={assets.pause_icon}
-              alt=""
+              src={assets.pause_icon || null}
+              alt="Pause"
+              onError={handleImageError}
             />
           ) : (
             <img
               onClick={play}
               className="w-4 cursor-pointer"
-              src={assets.play_icon}
-              alt=""
+              src={assets.play_icon || null}
+              alt="Play"
+              onError={handleImageError}
             />
           )}
-
-          <img onClick={next} className="w-4 cursor-pointer" src={assets.next_icon} alt="" />
-          <img className="w-4 cursor-pointer" src={assets.loop_icon} alt="" />
+          <img 
+            onClick={next} 
+            className="w-4 cursor-pointer" 
+            src={assets.next_icon || null} 
+            alt="Next track"
+            onError={handleImageError}
+          />
+          <img 
+            className="w-4 cursor-pointer" 
+            src={assets.loop_icon || null} 
+            alt="Loop"
+            onError={handleImageError}
+          />
         </div>
         <div className="flex items-center gap-5">
           <p>
             {time.currentTime.minute}:{time.currentTime.second}
           </p>
           <div
-            ref={seekBg} onClick={seekSong}
+            ref={seekBg} 
+            onClick={seekSong}
             className="w-[60vw] max-w-[500px] bg-gray-300 rounded-full cursor-pointer"
           >
             <hr
@@ -68,17 +100,17 @@ const Player = () => {
         </div>
       </div>
       <div className="hidden lg:flex items-center gap-2 opacity-75">
-        <img className="w-4" src={assets.play_icon} alt="" />
-        <img className="w-4" src={assets.mic_icon} alt="" />
-        <img className="w-4" src={assets.queue_icon} alt="" />
-        <img className="w-4" src={assets.speaker_icon} alt="" />
-        <img className="w-4" src={assets.volume_icon} alt="" />
+        <img className="w-4" src={assets.play_icon || null} alt="Play icon" onError={handleImageError} />
+        <img className="w-4" src={assets.mic_icon || null} alt="Microphone" onError={handleImageError} />
+        <img className="w-4" src={assets.queue_icon || null} alt="Queue" onError={handleImageError} />
+        <img className="w-4" src={assets.speaker_icon || null} alt="Speaker" onError={handleImageError} />
+        <img className="w-4" src={assets.volume_icon || null} alt="Volume" onError={handleImageError} />
         <div className="w-20 bg-slate-50 h-1 rounded"></div>
-        <img className="w-4" src={assets.mini_player_icon} alt="" />
-        <img className="w-4" src={assets.zoom_icon} alt="" />
+        <img className="w-4" src={assets.mini_player_icon || null} alt="Mini player" onError={handleImageError} />
+        <img className="w-4" src={assets.zoom_icon || null} alt="Zoom" onError={handleImageError} />
       </div>
     </div>
-  ): null
+  ) : null;
 };
 
 export default Player;

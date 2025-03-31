@@ -20,7 +20,7 @@ const Display = () => {
         displayRef.current.style.background = "#121212";
       }
     }
-  }, [isAlbum, album]); // ✅ Runs when `isAlbum` or `album` changes
+  }, [isAlbum, album]);
 
   return (
     <div
@@ -30,7 +30,10 @@ const Display = () => {
       {albumsData.length > 0 ? (
         <Routes>
           <Route path="/" element={<DisplayHome />} />
-          <Route path="/album/:id" element={<DisplayAlbum album={album} />} />
+          <Route 
+            path="/album/:id" 
+            element={<DisplayAlbum album={album} />} 
+          />
         </Routes>
       ) : (
         <p>Loading albums...</p>
