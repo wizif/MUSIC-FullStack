@@ -98,6 +98,7 @@ const Player = () => {
             {time.totalTime.minute}:{time.totalTime.seconds}
           </p>
         </div>
+        
       </div>
       <div className="hidden lg:flex items-center gap-2 opacity-75">
         <img className="w-4" src={assets.play_icon || null} alt="Play icon" onError={handleImageError} />

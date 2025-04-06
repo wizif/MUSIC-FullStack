@@ -11,6 +11,7 @@ const addAlbum = async (req, res) => {
       resource_type: "image",
     });
 
+    
     const albumData = {
       name,
       desc,

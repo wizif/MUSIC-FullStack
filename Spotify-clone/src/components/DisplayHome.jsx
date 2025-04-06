@@ -19,6 +19,7 @@ const DisplayHome = () => {
             id={album._id}
           />
         ))}
+        
       </div>
 
       <h2 className="text-white text-2xl font-bold mt-6 mb-4">Songs</h2>

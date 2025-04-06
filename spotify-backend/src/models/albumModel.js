@@ -19,6 +19,7 @@ const albumSchema = new mongoose.Schema({
   },
 });
 
+
 const albumModel =
   mongoose.models.album || mongoose.model("album", albumSchema);
 
