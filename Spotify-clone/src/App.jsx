@@ -17,8 +17,16 @@ const App = () => {
           </div>
           <Player />
         </>
-      ) : null}
-      <audio ref={audioRef} src={track ? track.file : ""} preload="auto"></audio>
+      ) : (
+        // ✅ Optional: Add loading state
+        <div className="h-screen flex items-center justify-center text-white">
+          <p>Loading songs...</p>
+        </div>
+      )}
+      {/* ✅ Fixed: Only render audio element when track exists and has a file */}
+      {track && track.file && (
+        <audio ref={audioRef} src={track.file} preload="auto"></audio>
+      )}
     </div>
   );
 };

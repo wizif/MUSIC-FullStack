@@ -9,9 +9,9 @@ const PlayerContextProvider = ({ children }) => {
   const seekBar = useRef(null);
   const url = "http://localhost:4000"; // Backend API URL
 
-  const [songsData, setSongsData] = useState([]); // ✅ Fixed: Changed from allSongs to songsData
+  const [songsData, setSongsData] = useState([]);
   const [albumsData, setAlbumsData] = useState([]);
-  const [track, setTrack] = useState(songsData[0]);
+  const [track, setTrack] = useState(null); // ✅ Fixed: Start with null instead of undefined array access
   const [playStatus, setPlayStatus] = useState(false);
   const [time, setTime] = useState({
     currentTime: { second: 0, minute: 0 },
@@ -35,41 +35,43 @@ const PlayerContextProvider = ({ children }) => {
   };
 
   // ✅ Play song by ID
-  const playWithId =async (id) => {
-    await songsData.map((item)=>{
-      if(id===item._id){
-        setTrack(item);
-      }
-    })
-    await audioRef.current.play();
-    setPlayStatus(true);
-  }
-    
-
-  // ✅ Play previous song
-  const previous = async() => {
-    songsData.map(async(item,index)=>{
-
-      if(track._id===item._id && index>0){
-        await setTrack(songsData[index-1]);
+  const playWithId = async (id) => {
+    const foundSong = songsData.find(item => item._id === id);
+    if (foundSong) {
+      setTrack(foundSong);
+      if (audioRef.current) {
         await audioRef.current.play();
         setPlayStatus(true);
       }
-      
-    })
+    }
+  };
+
+  // ✅ Play previous song
+  const previous = async () => {
+    if (!track || songsData.length === 0) return;
+    
+    const currentIndex = songsData.findIndex(item => item._id === track._id);
+    if (currentIndex > 0) {
+      setTrack(songsData[currentIndex - 1]);
+      if (audioRef.current) {
+        await audioRef.current.play();
+        setPlayStatus(true);
+      }
+    }
   };
 
   // ✅ Play next song
-  const next = async() => {
-    songsData.map(async(item,index)=>{
-
-      if(track._id===item._id && index>0){
-        await setTrack(songsData[index+1]);
+  const next = async () => {
+    if (!track || songsData.length === 0) return;
+    
+    const currentIndex = songsData.findIndex(item => item._id === track._id);
+    if (currentIndex < songsData.length - 1) {
+      setTrack(songsData[currentIndex + 1]);
+      if (audioRef.current) {
         await audioRef.current.play();
         setPlayStatus(true);
       }
-      
-    })
+    }
   };
 
   // ✅ Seek song
@@ -85,12 +87,26 @@ const PlayerContextProvider = ({ children }) => {
   const getSongsData = async () => {
     try {
       const response = await axios.get(`${url}/api/song/list`);
-      setSongsData(response.data.songs); // ✅ Fixed: Changed from setAllSongs to setSongsData
-      if (response.data.songs.length > 0) {
-        setTrack(response.data.songs[0]);
+      console.log("Songs API Response:", response.data);
+      
+      if (response.data && response.data.success === false) {
+        console.error("Backend returned error:", response.data.message || "Unknown error");
+        setSongsData([]);
+        return;
+      }
+      
+      if (response.data && response.data.songs && Array.isArray(response.data.songs)) {
+        setSongsData(response.data.songs);
+        if (response.data.songs.length > 0) {
+          setTrack(response.data.songs[0]);
+        }
+      } else {
+        console.error("Invalid API response structure:", response.data);
+        setSongsData([]);
       }
     } catch (error) {
       console.error("Error fetching songs:", error);
+      setSongsData([]);
     }
   };
 
@@ -98,9 +114,23 @@ const PlayerContextProvider = ({ children }) => {
   const getAlbumsData = async () => {
     try {
       const response = await axios.get(`${url}/api/album/list`);
-      setAlbumsData(response.data.albums);
+      console.log("Albums API Response:", response.data);
+      
+      if (response.data && response.data.success === false) {
+        console.error("Backend returned error:", response.data.message || "Unknown error");
+        setAlbumsData([]);
+        return;
+      }
+      
+      if (response.data && response.data.albums && Array.isArray(response.data.albums)) {
+        setAlbumsData(response.data.albums);
+      } else {
+        console.error("Invalid albums API response:", response.data);
+        setAlbumsData([]);
+      }
     } catch (error) {
       console.error("Error fetching albums:", error);
+      setAlbumsData([]);
     }
   };
 
@@ -109,7 +139,7 @@ const PlayerContextProvider = ({ children }) => {
     if (!audioRef.current) return;
 
     const updateTime = () => {
-      if (audioRef.current && seekBar.current) {
+      if (audioRef.current && seekBar.current && !isNaN(audioRef.current.duration)) {
         seekBar.current.style.width =
           Math.floor((audioRef.current.currentTime / audioRef.current.duration) * 100) + "%";
 
@@ -132,7 +162,7 @@ const PlayerContextProvider = ({ children }) => {
         audioRef.current.ontimeupdate = null;
       }
     };
-  }, [track]); // ✅ Dependency: Runs when `track` changes
+  }, [track]);
 
   // ✅ Fetch songs and albums on mount
   useEffect(() => {
@@ -157,7 +187,7 @@ const PlayerContextProvider = ({ children }) => {
     previous,
     next,
     seekSong,
-    songsData, // ✅ Fixed: Changed from allSongs to songsData
+    songsData,
     albumsData,
   };
 
