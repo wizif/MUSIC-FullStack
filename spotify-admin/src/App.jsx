@@ -9,7 +9,8 @@ import ListAlbum from "./pages/ListAlbum.jsx";
 import Sidebar from "./components/Sidebar.jsx";
 import Navbar from "./components/Navbar.jsx";
 
-export const url = "https://spotify-backend-r71h.onrender.com";
+// ✅ Changed to local backend URL
+export const url = "http://localhost:4000";
 
 const App = () => {
   return (
@@ -22,9 +23,7 @@ const App = () => {
           <Routes>
             <Route path="/add-song" element={<AddSong />} />
             <Route path="/add-album" element={<AddAlbum />} />
-
             <Route path="/list-song" element={<ListSong />} />
-
             <Route path="/list-album" element={<ListAlbum />} />
           </Routes>
         </div>

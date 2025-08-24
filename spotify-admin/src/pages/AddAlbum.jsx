@@ -57,7 +57,7 @@ const AddAlbum = () => {
           accept="image/*"
           hidden
         />
-        
+
         <label htmlFor="image">
           <img
             className="w-24 cursor-pointer"
