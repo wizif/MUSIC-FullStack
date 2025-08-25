@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Navigate } from 'react-router-dom';
 import AdminSidebar from './AdminSidebar.jsx';
 import AdminNavbar from './AdminNavbar.jsx';
@@ -8,7 +8,6 @@ import LoadingSpinner from '../shared/LoadingSpinner.jsx';
 
 const AdminLayout = ({ children }) => {
   const { user, userRole, isLoading } = useAuth();
-  const [activeTab, setActiveTab] = useState('dashboard');
 
   // Check if user is authenticated and has admin role
   if (isLoading) {
@@ -31,8 +30,8 @@ const AdminLayout = ({ children }) => {
 
   return (
     <div className="h-screen bg-black text-white flex overflow-hidden">
-      {/* Sidebar */}
-      <AdminSidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+      {/* Sidebar - Fixed navigation */}
+      <AdminSidebar />
       
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -41,7 +40,7 @@ const AdminLayout = ({ children }) => {
         
         {/* Content Area */}
         <main className="flex-1 overflow-y-auto bg-gradient-to-b from-[#1a1a1a] to-black p-6">
-          {React.cloneElement(children, { activeTab, setActiveTab })}
+          {children}
         </main>
       </div>
     </div>

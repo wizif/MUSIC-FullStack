@@ -1,25 +1,43 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Music, User, Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { Music, User, Mail, Shield } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext.jsx';
+import { USER_ROLES } from '../../utils/constants.js';
 import LoadingSpinner from '../../components/shared/LoadingSpinner.jsx';
 
 const LoginPage = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, switchRole } = useAuth();
   const [formData, setFormData] = useState({
     name: '',
     email: ''
   });
-  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Admin emails list
+  const adminEmails = [
+    'admin@spotify.com',
+    'admin@music.com', 
+    'superadmin@spotify.com'
+  ];
 
   const handleInputChange = (e) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
     });
+  };
+
+  const determineUserRole = (email) => {
+    const emailLower = email.toLowerCase();
+    
+    // Check if email is in admin list or contains 'admin'
+    if (adminEmails.includes(emailLower) || emailLower.includes('admin')) {
+      return USER_ROLES.ADMIN;
+    }
+    
+    return USER_ROLES.USER;
   };
 
   const handleSubmit = async (e) => {
@@ -35,10 +53,21 @@ const LoginPage = () => {
         throw new Error('Email is required');
       }
 
+      // Determine role based on email
+      const userRole = determineUserRole(formData.email);
+      
       const result = await login(formData);
       
       if (result.success) {
-        navigate('/');
+        // Switch to appropriate role
+        switchRole(userRole);
+        
+        // Navigate based on role
+        if (userRole === USER_ROLES.ADMIN) {
+          navigate('/admin');
+        } else {
+          navigate('/');
+        }
       } else {
         throw new Error(result.error || 'Login failed');
       }
@@ -49,20 +78,32 @@ const LoginPage = () => {
     }
   };
 
-  const handleDemoLogin = async () => {
+  const handleDemoLogin = async (isAdmin = false) => {
     setLoading(true);
     setError('');
 
     try {
-      const demoCredentials = {
-        name: 'Demo User',
-        email: 'demo@spotify.com'
-      };
+      const demoCredentials = isAdmin 
+        ? {
+            name: 'Admin User',
+            email: 'admin@spotify.com'
+          }
+        : {
+            name: 'Demo User',
+            email: 'demo@spotify.com'
+          };
 
       const result = await login(demoCredentials);
       
       if (result.success) {
-        navigate('/');
+        const role = isAdmin ? USER_ROLES.ADMIN : USER_ROLES.USER;
+        switchRole(role);
+        
+        if (isAdmin) {
+          navigate('/admin');
+        } else {
+          navigate('/');
+        }
       } else {
         throw new Error('Demo login failed');
       }
@@ -125,11 +166,14 @@ const LoginPage = () => {
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  placeholder="Enter your email"
+                  placeholder="Enter your email (use admin@spotify.com for admin access)"
                   className="w-full pl-10 pr-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
                   disabled={loading}
                 />
               </div>
+              <p className="text-xs text-gray-500 mt-1">
+                💡 Tip: Use email with "admin" or admin@spotify.com for admin access
+              </p>
             </div>
 
             {/* Login Button */}
@@ -152,18 +196,30 @@ const LoginPage = () => {
           {/* Divider */}
           <div className="my-6 flex items-center">
             <div className="flex-1 border-t border-gray-700"></div>
-            <span className="mx-4 text-gray-400 text-sm">or</span>
+            <span className="mx-4 text-gray-400 text-sm">or try demo</span>
             <div className="flex-1 border-t border-gray-700"></div>
           </div>
 
-          {/* Demo Login */}
-          <button
-            onClick={handleDemoLogin}
-            disabled={loading}
-            className="w-full bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg transition-all hover:scale-105"
-          >
-            {loading ? 'Loading...' : 'Try Demo Account'}
-          </button>
+          {/* Demo Login Buttons */}
+          <div className="space-y-3">
+            <button
+              onClick={() => handleDemoLogin(false)}
+              disabled={loading}
+              className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-800 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg transition-all hover:scale-105 flex items-center justify-center"
+            >
+              <User className="w-4 h-4 mr-2" />
+              {loading ? 'Loading...' : 'Demo User Account'}
+            </button>
+            
+            <button
+              onClick={() => handleDemoLogin(true)}
+              disabled={loading}
+              className="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-gray-800 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg transition-all hover:scale-105 flex items-center justify-center"
+            >
+              <Shield className="w-4 h-4 mr-2" />
+              {loading ? 'Loading...' : 'Demo Admin Account'}
+            </button>
+          </div>
 
           {/* Footer */}
           <div className="mt-6 text-center">

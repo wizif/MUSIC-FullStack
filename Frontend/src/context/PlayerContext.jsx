@@ -33,6 +33,9 @@ export const PlayerProvider = ({ children }) => {
   const [shuffle, setShuffle] = useState(false);
   const [repeat, setRepeat] = useState(false);
 
+  // Album songs cache
+  const [albumSongsCache, setAlbumSongsCache] = useState({});
+
   // Load initial data
   useEffect(() => {
     loadSongs();
@@ -85,6 +88,44 @@ export const PlayerProvider = ({ children }) => {
     }
   };
 
+  // Load songs for specific album
+  const loadAlbumSongs = async (albumId) => {
+    try {
+      // Check cache first
+      if (albumSongsCache[albumId]) {
+        console.log('🎵 Using cached songs for album:', albumId);
+        return albumSongsCache[albumId];
+      }
+
+      console.log('🎵 Loading songs for album:', albumId);
+      const response = await albumAPI.getWithSongs(albumId);
+      
+      if (response.success && response.songs) {
+        // Cache the songs
+        setAlbumSongsCache(prev => ({
+          ...prev,
+          [albumId]: response.songs
+        }));
+        
+        console.log('✅ Album songs loaded:', response.songs.length);
+        return response.songs;
+      } else {
+        throw new Error(response.message || 'Failed to load album songs');
+      }
+    } catch (error) {
+      console.error('❌ Error loading album songs:', error);
+      // Fallback: filter from all songs
+      const album = albumsData.find(a => a._id === albumId);
+      if (album) {
+        const filteredSongs = songsData.filter(song => 
+          song.album === album.name || song.album === albumId
+        );
+        return filteredSongs;
+      }
+      return [];
+    }
+  };
+
   // Audio control functions
   const play = async () => {
     if (audioRef.current && track) {
@@ -109,7 +150,16 @@ export const PlayerProvider = ({ children }) => {
 
   const playWithId = async (id) => {
     try {
-      const foundSong = songsData.find(item => item._id === id);
+      let foundSong = songsData.find(item => item._id === id);
+      
+      // If not found in main songs, check album cache
+      if (!foundSong) {
+        for (const albumId in albumSongsCache) {
+          foundSong = albumSongsCache[albumId].find(item => item._id === id);
+          if (foundSong) break;
+        }
+      }
+      
       if (!foundSong) {
         throw new Error('Song not found');
       }
@@ -129,26 +179,31 @@ export const PlayerProvider = ({ children }) => {
   };
 
   const previous = async () => {
-    if (!track || songsData.length === 0) return;
-    
-    const currentIndex = songsData.findIndex(item => item._id === track._id);
-    if (currentIndex > 0) {
-      await playWithId(songsData[currentIndex - 1]._id);
-    } else if (repeat) {
-      // If repeat is on, go to last song
-      await playWithId(songsData[songsData.length - 1]._id);
+    if (!track || currentPlaylist.length === 0) {
+      // Use all songs if no specific playlist
+      const playlist = currentPlaylist.length > 0 ? currentPlaylist : songsData;
+      if (playlist.length === 0) return;
+      
+      const currentIndex = playlist.findIndex(item => item._id === track._id);
+      if (currentIndex > 0) {
+        await playWithId(playlist[currentIndex - 1]._id);
+      } else if (repeat) {
+        await playWithId(playlist[playlist.length - 1]._id);
+      }
     }
   };
 
   const next = async () => {
-    if (!track || songsData.length === 0) return;
+    if (!track) return;
     
-    const currentIndex = songsData.findIndex(item => item._id === track._id);
-    if (currentIndex < songsData.length - 1) {
-      await playWithId(songsData[currentIndex + 1]._id);
+    const playlist = currentPlaylist.length > 0 ? currentPlaylist : songsData;
+    if (playlist.length === 0) return;
+    
+    const currentIndex = playlist.findIndex(item => item._id === track._id);
+    if (currentIndex < playlist.length - 1) {
+      await playWithId(playlist[currentIndex + 1]._id);
     } else if (repeat) {
-      // If repeat is on, go to first song
-      await playWithId(songsData[0]._id);
+      await playWithId(playlist[0]._id);
     }
   };
 
@@ -175,6 +230,12 @@ export const PlayerProvider = ({ children }) => {
   const toggleRepeat = () => {
     setRepeat(!repeat);
     console.log('🔁 Repeat:', !repeat ? 'ON' : 'OFF');
+  };
+
+  // Set current playlist (for album playback)
+  const setAlbumPlaylist = (songs) => {
+    setCurrentPlaylist(songs);
+    console.log('🎵 Album playlist set:', songs.length, 'songs');
   };
 
   // Handle audio time updates
@@ -256,6 +317,7 @@ export const PlayerProvider = ({ children }) => {
     shuffle,
     repeat,
     currentPlaylist,
+    albumSongsCache,
 
     // Actions
     play,
@@ -274,8 +336,10 @@ export const PlayerProvider = ({ children }) => {
     setSongsData,
     setAlbumsData,
     setCurrentPlaylist,
+    setAlbumPlaylist,
     loadSongs,
     loadAlbums,
+    loadAlbumSongs,
     setError
   };
 

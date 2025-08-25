@@ -14,7 +14,8 @@ export const API_ENDPOINTS = {
   ALBUMS: {
     LIST: '/api/album/list', 
     ADD: '/api/album/add',
-    REMOVE: '/api/album/remove'
+    REMOVE: '/api/album/remove',
+    GET_SONGS: (albumId) => `/api/album/${albumId}/songs` // NEW: Get songs by album
   }
 };
 
@@ -35,6 +36,13 @@ export const USER_ROLES = {
   USER: 'user',
   ADMIN: 'admin'
 };
+
+// Admin Emails - Users with these emails get admin access
+export const ADMIN_EMAILS = [
+  'admin@spotify.com',
+  'admin@music.com',
+  'superadmin@spotify.com'
+];
 
 // File Upload Constraints
 export const UPLOAD_CONSTRAINTS = {

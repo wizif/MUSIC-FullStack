@@ -13,7 +13,7 @@ const api = axios.create({
 // Request interceptor
 api.interceptors.request.use(
   (config) => {
-    console.log(`🔄 API Request: ${config.method?.toUpperCase()} ${config.url}`);
+    console.log(`📤 API Request: ${config.method?.toUpperCase()} ${config.url}`);
     return config;
   },
   (error) => {
@@ -93,6 +93,16 @@ export const albumAPI = {
       return response.data;
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Failed to fetch albums');
+    }
+  },
+
+  // Get album with songs
+  getWithSongs: async (albumId) => {
+    try {
+      const response = await api.get(API_ENDPOINTS.ALBUMS.GET_SONGS(albumId));
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to fetch album songs');
     }
   },
 

@@ -1,8 +1,7 @@
 import React, { useEffect, useRef } from 'react';
-import { Routes, Route, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { usePlayer } from '../../context/PlayerContext.jsx';
-import DisplayHome from '../../pages/user/DisplayHome.jsx';
-import DisplayAlbum from '../../pages/user/DisplayAlbum.jsx';
+import Navbar from './Navbar.jsx';
 
 const Display = ({ children }) => {
   const { albumsData } = usePlayer();
@@ -28,11 +27,12 @@ const Display = ({ children }) => {
       ref={displayRef}
       className="bg-[#121212] rounded-lg flex-1 overflow-hidden flex flex-col w-full h-full"
     >
+      {/* Navigation Bar */}
+      <Navbar />
+      
+      {/* Content Area */}
       <div className="flex-1 overflow-y-auto overflow-x-hidden w-full">
-        <Routes>
-          <Route path="/" element={<DisplayHome />} />
-          <Route path="/album/:id" element={<DisplayAlbum />} />
-        </Routes>
+        {children}
       </div>
     </div>
   );
