@@ -95,7 +95,7 @@ const DisplayAlbum = () => {
           </p>
           
           <div className="flex items-center space-x-2 text-sm text-gray-400">
-            <span className="font-medium text-white">Spotify</span>
+            <span className="font-medium text-white">MusicOn</span>
             <span>•</span>
             <span>{albumSongs.length} song{albumSongs.length !== 1 ? 's' : ''}</span>
           </div>

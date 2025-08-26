@@ -80,11 +80,11 @@ const LoginPage = () => {
       const demoCredentials = isAdmin 
         ? {
             name: 'Admin User',
-            email: 'admin@spotify.com'
+            email: 'admin@MusicOn.com'
           }
         : {
             name: 'Demo User',
-            email: 'demo@spotify.com'
+            email: 'demo@MusicOn.com'
           };
 
       const result = await login(demoCredentials);
@@ -108,7 +108,7 @@ const LoginPage = () => {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-green-500 rounded-full mb-4">
             <Music className="w-8 h-8 text-black" />
           </div>
-          <h1 className="text-3xl font-bold text-white mb-2">Welcome to Spotify</h1>
+          <h1 className="text-3xl font-bold text-white mb-2">Welcome to MusicOn</h1>
           <p className="text-gray-400">Enter your details to continue</p>
         </div>
 
@@ -153,14 +153,14 @@ const LoginPage = () => {
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  placeholder="Enter your email (use admin@spotify.com for admin access)"
+                  placeholder="Enter your email (use admin@MusicOn.com for admin access)"
                   className="w-full pl-10 pr-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
                   disabled={loading}
                   required
                 />
               </div>
               <p className="text-xs text-gray-500 mt-1">
-                Tip: Use email with "admin" or admin@spotify.com for admin access
+                Tip: Use email with "admin" or admin@MusicOn.com for admin access
               </p>
             </div>
 
@@ -212,7 +212,7 @@ const LoginPage = () => {
           {/* Footer */}
           <div className="mt-6 text-center">
             <p className="text-gray-400 text-sm">
-              By continuing, you agree to Spotify's Terms of Service
+              By continuing, you agree to MusicOn's Terms of Service
             </p>
           </div>
         </div>

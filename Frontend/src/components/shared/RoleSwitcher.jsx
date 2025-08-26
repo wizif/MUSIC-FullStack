@@ -94,7 +94,7 @@ const RoleSwitcher = () => {
 
             {/* Show admin option only if user has admin privileges */}
             {(isAdmin || user.email.toLowerCase().includes('admin') || 
-              ['admin@spotify.com', 'admin@music.com', 'superadmin@spotify.com'].includes(user.email.toLowerCase())) && (
+              ['admin@MusicOn.com', 'admin@music.com', 'superadmin@MusicOn.com'].includes(user.email.toLowerCase())) && (
               <button
                 onClick={() => handleRoleSwitch(USER_ROLES.ADMIN)}
                 className={`w-full flex items-center px-4 py-2 text-left hover:bg-gray-700 transition-colors ${

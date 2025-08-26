@@ -28,7 +28,7 @@ const AdminSidebar = () => {
       <div className="p-6 border-b border-gray-800">
         <h1 className="text-2xl font-bold text-white flex items-center">
           <Music className="mr-3 text-green-500" />
-          Spotify Admin
+          MusicOn Admin
         </h1>
         <p className="text-gray-400 text-sm mt-1">Manage your music library</p>
       </div>
@@ -63,7 +63,7 @@ const AdminSidebar = () => {
       {/* Footer */}
       <div className="p-4 border-t border-gray-800">
         <div className="text-xs text-gray-500 text-center">
-          <p>Spotify Admin Panel v1.0</p>
+          <p>MusicOn Admin Panel v1.0</p>
           <p className="mt-1">© 2024 All rights reserved</p>
         </div>
       </div>
