@@ -1,114 +1,184 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './context/AuthContext.jsx';
+import { AuthProvider, useAuth, USER_ROLES } from './context/AuthContext.jsx';
 import { PlayerProvider } from './context/PlayerContext.jsx';
 
-// Admin Components
+// Import layouts
+import UserLayout from './components/user/UserLayout.jsx';
 import AdminLayout from './components/admin/AdminLayout.jsx';
+
+// Import pages
+import LoginPage from './pages/shared/LoginPage.jsx';
+import DisplayHome from './pages/user/DisplayHome.jsx';
+import DisplayAlbum from './pages/user/DisplayAlbum.jsx';
 import Dashboard from './pages/admin/Dashboard.jsx';
 import AddSong from './pages/admin/AddSong.jsx';
 import AddAlbum from './pages/admin/AddAlbum.jsx';
 import ListSong from './pages/admin/ListSong.jsx';
 import ListAlbum from './pages/admin/ListAlbum.jsx';
 
-// User Components
-import UserLayout from './components/user/Userlayout.jsx';
-import DisplayHome from './pages/user/DisplayHome.jsx';
-import DisplayAlbum from './pages/user/DisplayAlbum.jsx';
-
-// Shared Components
-import LoginPage from './pages/shared/LoginPage.jsx';
 import LoadingSpinner from './components/shared/LoadingSpinner.jsx';
 
-import { USER_ROLES } from './utils/constants.js';
-
-// Protected Route Component
-const ProtectedRoute = ({ children, requiredRole }) => {
-  const { user, userRole, isLoading } = useAuth();
+// Protected Route Component for Users
+const ProtectedUserRoute = ({ children }) => {
+  const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
-    return <LoadingSpinner size="large" text="Loading application..." />;
+    return (
+      <div className="h-screen bg-black flex items-center justify-center">
+        <LoadingSpinner size="large" text="Authenticating..." />
+      </div>
+    );
   }
 
-  if (!user) {
+  if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
-  if (requiredRole && userRole !== requiredRole) {
+  return children;
+};
+
+// Protected Route Component for Admins
+const ProtectedAdminRoute = ({ children }) => {
+  const { isAuthenticated, isAdmin, userRole, user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="h-screen bg-black flex items-center justify-center">
+        <LoadingSpinner size="large" text="Checking permissions..." />
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // Check if user has admin privileges
+  if (!isAdmin || userRole !== USER_ROLES.ADMIN) {
+    console.log('Access denied - redirecting to user dashboard');
     return <Navigate to="/" replace />;
   }
 
   return children;
 };
 
+// Loading fallback for authentication check
+const AuthLoadingFallback = () => (
+  <div className="h-screen bg-black flex items-center justify-center">
+    <LoadingSpinner size="large" text="Loading application..." />
+  </div>
+);
+
+// Main App Router Component
+const AppRouter = () => {
+  const { isAuthenticated, userRole, isLoading, user } = useAuth();
+
+  // Show loading spinner while checking authentication
+  if (isLoading) {
+    return <AuthLoadingFallback />;
+  }
+
+  return (
+    <Routes>
+      {/* Public Route - Login */}
+      <Route 
+        path="/login" 
+        element={
+          isAuthenticated ? (
+            userRole === USER_ROLES.ADMIN ? 
+            <Navigate to="/admin" replace /> : 
+            <Navigate to="/" replace />
+          ) : (
+            <LoginPage />
+          )
+        } 
+      />
+      
+      {/* User Routes - Protected */}
+      <Route path="/" element={
+        <ProtectedUserRoute>
+          <UserLayout>
+            <DisplayHome />
+          </UserLayout>
+        </ProtectedUserRoute>
+      } />
+      
+      <Route path="/album/:id" element={
+        <ProtectedUserRoute>
+          <UserLayout>
+            <DisplayAlbum />
+          </UserLayout>
+        </ProtectedUserRoute>
+      } />
+
+      {/* Admin Routes - Protected with Admin Role */}
+      <Route path="/admin" element={
+        <ProtectedAdminRoute>
+          <AdminLayout>
+            <Dashboard />
+          </AdminLayout>
+        </ProtectedAdminRoute>
+      } />
+      
+      <Route path="/admin/add-song" element={
+        <ProtectedAdminRoute>
+          <AdminLayout>
+            <AddSong />
+          </AdminLayout>
+        </ProtectedAdminRoute>
+      } />
+      
+      <Route path="/admin/add-album" element={
+        <ProtectedAdminRoute>
+          <AdminLayout>
+            <AddAlbum />
+          </AdminLayout>
+        </ProtectedAdminRoute>
+      } />
+      
+      <Route path="/admin/list-songs" element={
+        <ProtectedAdminRoute>
+          <AdminLayout>
+            <ListSong />
+          </AdminLayout>
+        </ProtectedAdminRoute>
+      } />
+      
+      <Route path="/admin/list-albums" element={
+        <ProtectedAdminRoute>
+          <AdminLayout>
+            <ListAlbum />
+          </AdminLayout>
+        </ProtectedAdminRoute>
+      } />
+
+      {/* Catch all route - redirect based on authentication */}
+      <Route path="*" element={
+        isAuthenticated ? (
+          userRole === USER_ROLES.ADMIN ? 
+          <Navigate to="/admin" replace /> : 
+          <Navigate to="/" replace />
+        ) : (
+          <Navigate to="/login" replace />
+        )
+      } />
+    </Routes>
+  );
+};
+
 // Main App Component
 const App = () => {
   return (
-    <AuthProvider>
-      <PlayerProvider>
-        <Router>
-          <div className="h-screen bg-black text-white overflow-hidden">
-            <Routes>
-              {/* Login Route */}
-              <Route path="/login" element={<LoginPage />} />
-              
-              {/* Admin Routes */}
-              <Route path="/admin" element={
-                <ProtectedRoute requiredRole={USER_ROLES.ADMIN}>
-                  <AdminLayout>
-                    <Dashboard />
-                  </AdminLayout>
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/add-song" element={
-                <ProtectedRoute requiredRole={USER_ROLES.ADMIN}>
-                  <AdminLayout>
-                    <AddSong />
-                  </AdminLayout>
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/add-album" element={
-                <ProtectedRoute requiredRole={USER_ROLES.ADMIN}>
-                  <AdminLayout>
-                    <AddAlbum />
-                  </AdminLayout>
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/list-songs" element={
-                <ProtectedRoute requiredRole={USER_ROLES.ADMIN}>
-                  <AdminLayout>
-                    <ListSong />
-                  </AdminLayout>
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/list-albums" element={
-                <ProtectedRoute requiredRole={USER_ROLES.ADMIN}>
-                  <AdminLayout>
-                    <ListAlbum />
-                  </AdminLayout>
-                </ProtectedRoute>
-              } />
-              
-              {/* User Routes */}
-              <Route path="/" element={
-                <ProtectedRoute>
-                  <UserLayout>
-                    <DisplayHome />
-                  </UserLayout>
-                </ProtectedRoute>
-              } />
-              <Route path="/album/:id" element={
-                <ProtectedRoute>
-                  <UserLayout>
-                    <DisplayAlbum />
-                  </UserLayout>
-                </ProtectedRoute>
-              } />
-            </Routes>
-          </div>
-        </Router>
-      </PlayerProvider>
-    </AuthProvider>
+    <div className="w-full h-full">
+      <Router>
+        <AuthProvider>
+          <PlayerProvider>
+            <AppRouter />
+          </PlayerProvider>
+        </AuthProvider>
+      </Router>
+    </div>
   );
 };
 

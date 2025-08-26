@@ -27,8 +27,7 @@ const Display = ({ children }) => {
       ref={displayRef}
       className="bg-[#121212] rounded-lg flex-1 overflow-hidden flex flex-col w-full h-full"
     >
-      {/* Navigation Bar */}
-      <Navbar />
+    
       
       {/* Content Area */}
       <div className="flex-1 overflow-y-auto overflow-x-hidden w-full">

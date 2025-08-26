@@ -1,13 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Music, User, Mail, Shield } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext.jsx';
-import { USER_ROLES } from '../../utils/constants.js';
 import LoadingSpinner from '../../components/shared/LoadingSpinner.jsx';
 
 const LoginPage = () => {
   const navigate = useNavigate();
-  const { login, switchRole } = useAuth();
+  const { login, isAuthenticated, userRole, USER_ROLES } = useAuth();
   const [formData, setFormData] = useState({
     name: '',
     email: ''
@@ -15,29 +14,24 @@ const LoginPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Admin emails list
-  const adminEmails = [
-    'admin@spotify.com',
-    'admin@music.com', 
-    'superadmin@spotify.com'
-  ];
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      if (userRole === USER_ROLES.ADMIN) {
+        navigate('/admin', { replace: true });
+      } else {
+        navigate('/', { replace: true });
+      }
+    }
+  }, [isAuthenticated, userRole, navigate]);
 
   const handleInputChange = (e) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
     });
-  };
-
-  const determineUserRole = (email) => {
-    const emailLower = email.toLowerCase();
-    
-    // Check if email is in admin list or contains 'admin'
-    if (adminEmails.includes(emailLower) || emailLower.includes('admin')) {
-      return USER_ROLES.ADMIN;
-    }
-    
-    return USER_ROLES.USER;
+    // Clear error when user starts typing
+    if (error) setError('');
   };
 
   const handleSubmit = async (e) => {
@@ -46,6 +40,7 @@ const LoginPage = () => {
     setError('');
 
     try {
+      // Basic validation
       if (!formData.name.trim()) {
         throw new Error('Name is required');
       }
@@ -53,21 +48,20 @@ const LoginPage = () => {
         throw new Error('Email is required');
       }
 
-      // Determine role based on email
-      const userRole = determineUserRole(formData.email);
-      
-      const result = await login(formData);
+      // Email format validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email)) {
+        throw new Error('Please enter a valid email address');
+      }
+
+      const result = await login({
+        name: formData.name.trim(),
+        email: formData.email.trim()
+      });
       
       if (result.success) {
-        // Switch to appropriate role
-        switchRole(userRole);
-        
-        // Navigate based on role
-        if (userRole === USER_ROLES.ADMIN) {
-          navigate('/admin');
-        } else {
-          navigate('/');
-        }
+        console.log('Login successful, navigating...');
+        // Navigation will be handled by the useEffect above
       } else {
         throw new Error(result.error || 'Login failed');
       }
@@ -95,18 +89,10 @@ const LoginPage = () => {
 
       const result = await login(demoCredentials);
       
-      if (result.success) {
-        const role = isAdmin ? USER_ROLES.ADMIN : USER_ROLES.USER;
-        switchRole(role);
-        
-        if (isAdmin) {
-          navigate('/admin');
-        } else {
-          navigate('/');
-        }
-      } else {
-        throw new Error('Demo login failed');
+      if (!result.success) {
+        throw new Error(result.error || 'Demo login failed');
       }
+      // Navigation will be handled by the useEffect above
     } catch (error) {
       setError(error.message);
     } finally {
@@ -150,6 +136,7 @@ const LoginPage = () => {
                   placeholder="Enter your full name"
                   className="w-full pl-10 pr-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
                   disabled={loading}
+                  required
                 />
               </div>
             </div>
@@ -169,10 +156,11 @@ const LoginPage = () => {
                   placeholder="Enter your email (use admin@spotify.com for admin access)"
                   className="w-full pl-10 pr-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
                   disabled={loading}
+                  required
                 />
               </div>
               <p className="text-xs text-gray-500 mt-1">
-                💡 Tip: Use email with "admin" or admin@spotify.com for admin access
+                Tip: Use email with "admin" or admin@spotify.com for admin access
               </p>
             </div>
 
