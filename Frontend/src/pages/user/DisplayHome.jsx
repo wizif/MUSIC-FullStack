@@ -35,7 +35,7 @@ const DisplayHome = () => {
   const SectionHeader = ({ title, subtitle, icon: Icon, showViewAll = false }) => (
     <div className="flex items-center justify-between mb-6">
       <div className="flex items-center space-x-3">
-        {Icon && <Icon className="w-6 h-6 text-green-500" />}
+<TrendingUp className="w-6 h-6 text-green-500" />
         <div>
           <h1 className="text-2xl font-bold text-white">{title}</h1>
           {subtitle && <p className="text-gray-400 text-sm">{subtitle}</p>}

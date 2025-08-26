@@ -1,7 +1,21 @@
 import React, { useState } from 'react';
 import { 
-  Play, Pause, SkipBack, SkipForward, Volume2, Repeat, Shuffle, Heart 
+  Play,
+  Pause,
+  SkipBack,
+  SkipForward,
+  Volume2,
+  Volume1,
+  VolumeX,
+  Repeat,
+  Shuffle,
+  Heart,
+  ListMusic,
+  Share2,
+  Maximize2,
+  Minimize2
 } from 'lucide-react';
+
 import { usePlayer } from '../../context/PlayerContext.jsx';
 
 const Player = () => {

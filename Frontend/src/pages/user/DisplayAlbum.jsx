@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Play, Pause, Heart, MoreHorizontal, Clock } from 'lucide-react';
+import { Play, Pause, Heart, MoreHorizontal, Clock, Music } from 'lucide-react';
 import { usePlayer } from '../../context/PlayerContext.jsx';
 import SongItem from '../../components/shared/SongItem.jsx';
 import LoadingSpinner from '../../components/shared/LoadingSpinner.jsx';
