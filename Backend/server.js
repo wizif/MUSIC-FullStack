@@ -5,12 +5,19 @@ import songRouter from "./src/routes/songRoute.js";
 import connectDB from "./src/config/mongodb.js";
 import connectCloudinary from "./src/config/cloudinary.js";
 import albumRouter from "./src/routes/albumRoute.js";
+import cors from "cors";
 
 // app config
 const app = express();
 const port = process.env.PORT || 4000;
 connectDB();
 connectCloudinary();
+
+app.use(cors({
+  origin: ["https://music-on-wisemen.vercel.app"], // your frontend URL
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true
+}));
 
 // middleware
 app.use(express.json());
