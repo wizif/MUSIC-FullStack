@@ -4,7 +4,7 @@ import { AuthProvider, useAuth, USER_ROLES } from './context/AuthContext.jsx';
 import { PlayerProvider } from './context/PlayerContext.jsx';
 
 // Import layouts
-import UserLayout from './components/user/UserLayout.jsx';
+import UserLayout from './components/user/Userlayout.jsx';
 import AdminLayout from './components/admin/AdminLayout.jsx';
 
 // Import pages
