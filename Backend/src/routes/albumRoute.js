@@ -6,12 +6,14 @@ import {
   getAlbumSongs,
 } from "../controllers/albumController.js";
 import upload from "../middleware/multer.js";
+import { protect } from "../middleware/authMiddleware.js";
 
 const albumRouter = express.Router();
 
-albumRouter.post("/add", upload.single("image"), addAlbum);
-albumRouter.get("/list", listAlbum);
-albumRouter.get("/:id/songs", getAlbumSongs); // NEW: Get songs by album ID
-albumRouter.post("/remove", removeAlbum);
+// All album routes are protected by JWT authentication
+albumRouter.post("/add", protect, upload.single("image"), addAlbum);
+albumRouter.get("/list", protect, listAlbum);
+albumRouter.get("/:id/songs", protect, getAlbumSongs);
+albumRouter.post("/remove", protect, removeAlbum);
 
 export default albumRouter;

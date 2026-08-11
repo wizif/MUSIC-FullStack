@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import userModel from "../models/userModel.js";
 
 const protect = async (req, res, next) => {
   let token;
@@ -15,16 +16,33 @@ const protect = async (req, res, next) => {
       // Verify token
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-      // Attach user ID and role to request object
-      req.userId = decoded.userId;
-      req.userRole = decoded.role;
+      // Load user from database, excluding password
+      const user = await userModel.findById(decoded.userId).select("-password");
 
-      next();
+      if (!user) {
+        return res.status(401).json({
+          success: false,
+          message: "Not authorized, user not found",
+        });
+      }
+
+      // Attach user object to request
+      req.user = user;
+
+      return next();
     } catch (error) {
       console.error("❌ Auth Middleware Error:", error.message);
+      
+      let message = "Not authorized, token failed";
+      if (error.name === "TokenExpiredError") {
+        message = "Session expired, please login again";
+      } else if (error.name === "JsonWebTokenError") {
+        message = "Invalid token, authorization denied";
+      }
+
       return res.status(401).json({
         success: false,
-        message: "Not authorized, token failed",
+        message,
       });
     }
   }
@@ -37,4 +55,25 @@ const protect = async (req, res, next) => {
   }
 };
 
-export { protect };
+// Middleware factory for role checks
+const requireRole = (...allowedRoles) => {
+  return (req, res, next) => {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: "Not authorized, user credentials missing",
+      });
+    }
+
+    if (!allowedRoles.includes(req.user.role)) {
+      return res.status(403).json({
+        success: false,
+        message: "Forbidden, insufficient permissions",
+      });
+    }
+
+    next();
+  };
+};
+
+export { protect, requireRole };
