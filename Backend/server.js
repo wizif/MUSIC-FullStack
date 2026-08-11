@@ -5,7 +5,6 @@ import songRouter from "./src/routes/songRoute.js";
 import connectDB from "./src/config/mongodb.js";
 import connectCloudinary from "./src/config/cloudinary.js";
 import albumRouter from "./src/routes/albumRoute.js";
-import cors from "cors";
 
 // app config
 const app = express();
@@ -14,14 +13,13 @@ connectDB();
 connectCloudinary();
 
 app.use(cors({
-  origin: ["https://music-on-wisemen.vercel.app"], // your frontend URL
+  origin: ["https://music-on-wisemen.vercel.app", "http://localhost:3000", "http://localhost:5173"], // frontend URLs
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true
 }));
 
 // middleware
 app.use(express.json());
-app.use(cors());
 
 // initializing the routes
 app.use("/api/song", songRouter);
