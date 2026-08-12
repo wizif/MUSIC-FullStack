@@ -178,7 +178,7 @@ const MyTracks = () => {
             <Sparkles className="w-5 h-5 text-[#1ED760]" />
             <span className="text-xs font-bold tracking-widest text-[#1ED760] uppercase">Creator Dashboard</span>
           </div>
-          <h1 className="text-3xl font-extrabold text-white">My SoundCloud Profile</h1>
+          <h1 className="text-3xl font-extrabold text-white">My Tracks</h1>
           <p className="text-gray-400 text-sm mt-0.5 font-medium">Manage and upload your own tracks</p>
         </div>
 
@@ -230,7 +230,7 @@ const MyTracks = () => {
               <Plus className="w-5 h-5 text-[#1ED760]" />
               Upload a Track
             </h2>
-            <p className="text-xs text-gray-400 mt-1">Add a new track directly to SoundCloud feed</p>
+            <p className="text-xs text-gray-400 mt-1">Add a new track to your public library</p>
           </div>
 
           {isLimitReached ? (
@@ -396,17 +396,17 @@ const MyTracks = () => {
               <button
                 type="submit"
                 disabled={uploading}
-                className="w-full mt-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-black font-bold py-3.5 px-6 rounded-2xl transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] shadow-lg flex items-center justify-center text-sm"
+                className="w-full mt-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-black font-bold py-2.5 px-4 rounded-xl transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] shadow-lg flex items-center justify-center text-sm"
               >
                 {uploading ? (
                   <div className="flex items-center gap-2">
                     <LoadingSpinner size="small" className="text-black" />
-                    <span>Publishing to Cloudinary...</span>
+                    <span>Uploading...</span>
                   </div>
                 ) : (
                   <div className="flex items-center gap-2">
                     <Upload className="w-4 h-4" />
-                    <span>Publish Song</span>
+                    <span>Upload Track</span>
                   </div>
                 )}
               </button>
