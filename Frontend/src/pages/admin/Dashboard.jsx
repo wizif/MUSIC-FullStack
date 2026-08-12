@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Music, 
   Album, 
@@ -30,6 +31,7 @@ import { usePlayer } from '../../context/PlayerContext.jsx';
 import LoadingSpinner from '../../components/shared/LoadingSpinner.jsx';
 
 const Dashboard = () => {
+  const navigate = useNavigate();
   const { 
     songsData, 
     albumsData, 
@@ -175,14 +177,14 @@ const Dashboard = () => {
       description: 'Upload new music',
       icon: Plus,
       color: 'bg-green-500 hover:bg-green-600',
-      action: () => window.location.href = '/admin/add-song'
+      action: () => navigate('/admin/add-song')
     },
     {
       title: 'Create Album',
       description: 'New album collection',
       icon: Album,
       color: 'bg-blue-500 hover:bg-blue-600',
-      action: () => window.location.href = '/admin/add-album'
+      action: () => navigate('/admin/add-album')
     },
     {
       title: 'View Analytics',
@@ -196,7 +198,7 @@ const Dashboard = () => {
       description: 'User management',
       icon: Users,
       color: 'bg-yellow-500 hover:bg-yellow-600',
-      action: () => console.log('User management coming soon')
+      action: () => navigate('/admin/users')
     }
   ];
 
@@ -264,7 +266,7 @@ const Dashboard = () => {
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-xl font-semibold text-white">Recent Songs</h3>
             <button 
-              onClick={() => window.location.hash = '#/list-song'}
+              onClick={() => navigate('/admin/list-songs')}
               className="text-green-500 hover:text-green-400 text-sm font-medium transition-colors"
             >
               View all
@@ -352,7 +354,7 @@ const Dashboard = () => {
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-xl font-semibold text-white">Top Albums</h3>
             <button 
-              onClick={() => window.location.hash = '#/list-album'}
+              onClick={() => navigate('/admin/list-albums')}
               className="text-green-500 hover:text-green-400 text-sm font-medium transition-colors"
             >
               View all

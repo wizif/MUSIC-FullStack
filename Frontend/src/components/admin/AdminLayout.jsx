@@ -7,7 +7,7 @@ import { USER_ROLES } from '../../utils/constants.js';
 import LoadingSpinner from '../shared/LoadingSpinner.jsx';
 
 const AdminLayout = ({ children }) => {
-  const { user, userRole, isLoading } = useAuth();
+  const { user, isLoading, isAdmin } = useAuth();
 
   // Check if user is authenticated and has admin role
   if (isLoading) {
@@ -24,7 +24,7 @@ const AdminLayout = ({ children }) => {
   }
 
   // Redirect if not admin
-  if (userRole !== USER_ROLES.ADMIN) {
+  if (!isAdmin) {
     return <Navigate to="/" replace />;
   }
 

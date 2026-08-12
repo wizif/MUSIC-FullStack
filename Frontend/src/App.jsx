@@ -13,6 +13,7 @@ import DisplayHome from './pages/user/DisplayHome.jsx';
 import DisplayAlbum from './pages/user/DisplayAlbum.jsx';
 import MyTracks from './pages/user/MyTracks.jsx';
 import Dashboard from './pages/admin/Dashboard.jsx';
+import UsersPage from './pages/admin/Users.jsx';
 import AddSong from './pages/admin/AddSong.jsx';
 import AddAlbum from './pages/admin/AddAlbum.jsx';
 import ListSong from './pages/admin/ListSong.jsx';
@@ -126,6 +127,14 @@ const AppRouter = () => {
         <ProtectedAdminRoute>
           <AdminLayout>
             <Dashboard />
+          </AdminLayout>
+        </ProtectedAdminRoute>
+      } />
+
+      <Route path="/admin/users" element={
+        <ProtectedAdminRoute>
+          <AdminLayout>
+            <UsersPage />
           </AdminLayout>
         </ProtectedAdminRoute>
       } />

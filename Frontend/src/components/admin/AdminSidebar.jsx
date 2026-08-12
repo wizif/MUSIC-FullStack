@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, Plus, Album, Music, List, Settings } from 'lucide-react';
+import { Home, Plus, Album, Music, List, Settings, Users } from 'lucide-react';
 
 const AdminSidebar = () => {
   const navigate = useNavigate();
@@ -8,6 +8,7 @@ const AdminSidebar = () => {
 
   const sidebarItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Home, path: '/admin' },
+    { id: 'users', label: 'Monitor Users', icon: Users, path: '/admin/users' },
     { id: 'add-song', label: 'Add Song', icon: Plus, path: '/admin/add-song' },
     { id: 'add-album', label: 'Add Album', icon: Album, path: '/admin/add-album' },
     { id: 'list-songs', label: 'All Songs', icon: Music, path: '/admin/list-songs' },
