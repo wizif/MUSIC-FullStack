@@ -1,32 +1,33 @@
-// Enhanced Navbar.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Search, X, Music, Album } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Search, X, Music, Album, User, Upload, LayoutDashboard, LogOut } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { usePlayer } from '../../context/PlayerContext.jsx';
+import { searchSoundCloud } from '../../utils/soundcloudApi.js';
 
 const Navbar = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const { songsData, albumsData, playWithId } = usePlayer();
+  const { user, isAdmin, logout } = useAuth();
+  const { songsData, albumsData, playWithId, playTrack } = usePlayer();
   
   const [searchTerm, setSearchTerm] = useState("");
   const [isSearchFocused, setIsSearchFocused] = useState(false);
-  const [searchResults, setSearchResults] = useState({ songs: [], albums: [] });
+  const [searchResults, setSearchResults] = useState({ songs: [], albums: [], external: [] });
   const [showResults, setShowResults] = useState(false);
   
   const searchRef = useRef(null);
 
-  // Enhanced search functionality
+  // Enhanced search functionality with iTunes/SoundCloud integration
   useEffect(() => {
     if (!searchTerm.trim()) {
-      setSearchResults({ songs: [], albums: [] });
+      setSearchResults({ songs: [], albums: [], external: [] });
       setShowResults(false);
       return;
     }
 
     const term = searchTerm.toLowerCase();
     
+    // 1. Instant local filter
     const filteredSongs = songsData.filter(song => 
       song.name.toLowerCase().includes(term) ||
       song.desc.toLowerCase().includes(term) ||
@@ -38,8 +39,29 @@ const Navbar = () => {
       album.desc.toLowerCase().includes(term)
     ).slice(0, 3);
 
-    setSearchResults({ songs: filteredSongs, albums: filteredAlbums });
-    setShowResults(filteredSongs.length > 0 || filteredAlbums.length > 0);
+    // Update with local results immediately, keeping previous external tracks for now
+    setSearchResults(prev => ({
+      songs: filteredSongs,
+      albums: filteredAlbums,
+      external: prev.external
+    }));
+    setShowResults(filteredSongs.length > 0 || filteredAlbums.length > 0 || (searchResults.external && searchResults.external.length > 0));
+
+    // 2. Debounced API fetch for external SoundCloud tracks
+    const delayDebounce = setTimeout(async () => {
+      try {
+        const externalTracks = await searchSoundCloud(term, 5);
+        setSearchResults(prev => ({
+          ...prev,
+          external: externalTracks
+        }));
+        setShowResults(true);
+      } catch (err) {
+        console.error("External search failed:", err);
+      }
+    }, 450); // 450ms debounce to avoid rapid API calls
+
+    return () => clearTimeout(delayDebounce);
   }, [searchTerm, songsData, albumsData]);
 
   // Handle keyboard shortcuts
@@ -73,20 +95,30 @@ const Navbar = () => {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    if (searchTerm.trim() && searchResults.songs.length > 0) {
-      playWithId(searchResults.songs[0]._id);
-      clearSearch();
+    if (searchTerm.trim()) {
+      if (searchResults.songs.length > 0) {
+        playWithId(searchResults.songs[0]._id);
+        clearSearch();
+      } else if (searchResults.external && searchResults.external.length > 0) {
+        playTrack(searchResults.external[0]);
+        clearSearch();
+      }
     }
   };
 
   const clearSearch = () => {
     setSearchTerm('');
+    setSearchResults({ songs: [], albums: [], external: [] });
     setShowResults(false);
     setIsSearchFocused(false);
   };
 
   const handleSongClick = (song) => {
-    playWithId(song._id);
+    if (song.external) {
+      playTrack(song);
+    } else {
+      playWithId(song._id);
+    }
     clearSearch();
   };
 
@@ -99,11 +131,25 @@ const Navbar = () => {
     if (!user?.name) return 'U';
     return user.name
       .split(' ')
-      .map(name => name[0])
+      .map(n => n[0])
       .join('')
       .toUpperCase()
       .substring(0, 2);
   };
+
+  const [profileOpen, setProfileOpen] = useState(false);
+  const profileRef = useRef(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handler = (e) => {
+      if (profileRef.current && !profileRef.current.contains(e.target)) {
+        setProfileOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
 
   return (
     <div className="sticky top-0 z-50 bg-gradient-to-r from-[#121212] via-[#1a1a1a] to-[#121212] p-6 pb-4 w-full border-b border-gray-800/50 backdrop-blur-md">
@@ -235,8 +281,43 @@ const Navbar = () => {
                     </div>
                   )}
 
+                  {/* External SoundCloud Tracks */}
+                  {searchResults.external && searchResults.external.length > 0 && (
+                    <div className="p-2 border-t border-gray-700">
+                      <div className="px-3 py-2 text-xs font-medium text-gray-400 uppercase tracking-wider flex justify-between items-center">
+                        <span>SoundCloud Public Feed</span>
+                        <span className="text-[10px] text-gray-600 font-normal">SoundCloud API</span>
+                      </div>
+                      {searchResults.external.map((song) => (
+                        <button
+                          key={song._id}
+                          onClick={() => handleSongClick(song)}
+                          className="w-full flex items-center gap-3 p-3 hover:bg-[#2a2a2a] transition-colors rounded-lg group"
+                        >
+                          <img
+                            src={song.image}
+                            alt={song.name}
+                            className="w-10 h-10 rounded object-cover"
+                            onError={(e) => {
+                              e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIGZpbGw9IiMxZjFmMWYiPjxyZWN0IHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIvPjwvc3ZnPg==';
+                            }}
+                          />
+                          <div className="flex-1 text-left min-w-0">
+                            <p className="text-white font-medium truncate group-hover:text-green-400">
+                              {song.name}
+                            </p>
+                            <p className="text-gray-400 text-sm truncate">
+                              {song.desc} • {song.genre}
+                            </p>
+                          </div>
+                          <Music className="w-4 h-4 text-green-500" />
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
                   {/* No results */}
-                  {searchResults.songs.length === 0 && searchResults.albums.length === 0 && (
+                  {searchResults.songs.length === 0 && searchResults.albums.length === 0 && (!searchResults.external || searchResults.external.length === 0) && (
                     <div className="p-4 text-center text-gray-400">
                       <Search className="w-8 h-8 mx-auto mb-2 opacity-50" />
                       <p>No results found for "{searchTerm}"</p>
@@ -254,13 +335,56 @@ const Navbar = () => {
             )}
           </div>
 
-          <div className="flex items-center gap-2">
-            <button 
-              className="bg-gradient-to-r from-[#1ed760] to-[#1db954] hover:from-[#1db954] hover:to-[#17a74a] text-black w-9 h-9 rounded-full flex items-center justify-center font-bold transition-all duration-200 text-sm hover:scale-105 shadow-lg"
-              title={user?.name || 'User Profile'}
+          {/* Profile dropdown */}
+          <div className="relative" ref={profileRef}>
+            <button
+              onClick={() => setProfileOpen(prev => !prev)}
+              title={user?.name || 'Profile'}
+              className="bg-gradient-to-tr from-green-500 to-emerald-400 text-black w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm hover:scale-105 transition-transform shadow-lg"
             >
               {getUserInitials()}
             </button>
+
+            {profileOpen && (
+              <div className="absolute right-0 top-full mt-2 w-52 bg-[#1a1a1a] border border-white/[0.08] rounded-xl shadow-2xl overflow-hidden z-50">
+                {/* User info header */}
+                <div className="px-4 py-3 border-b border-white/[0.06]">
+                  <p className="text-white font-semibold text-sm truncate">{user?.name}</p>
+                  <p className="text-gray-500 text-xs truncate">{user?.email}</p>
+                </div>
+
+                {/* Menu items */}
+                <div className="py-1">
+                  <button
+                    onClick={() => { navigate('/profile/mine'); setProfileOpen(false); }}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-gray-300 hover:text-white hover:bg-white/[0.06] transition-colors text-sm"
+                  >
+                    <Upload className="w-4 h-4" />
+                    My Tracks
+                  </button>
+
+                  {isAdmin && (
+                    <button
+                      onClick={() => { navigate('/admin'); setProfileOpen(false); }}
+                      className="w-full flex items-center gap-3 px-4 py-2.5 text-gray-300 hover:text-white hover:bg-white/[0.06] transition-colors text-sm"
+                    >
+                      <LayoutDashboard className="w-4 h-4" />
+                      Admin Panel
+                    </button>
+                  )}
+                </div>
+
+                <div className="border-t border-white/[0.06] py-1">
+                  <button
+                    onClick={() => { logout(); setProfileOpen(false); }}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-rose-400 hover:text-rose-300 hover:bg-rose-500/[0.08] transition-colors text-sm"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Log out
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

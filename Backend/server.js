@@ -8,6 +8,7 @@ import albumRouter from "./src/routes/albumRoute.js";
 import authRouter from "./src/routes/authRoute.js";
 import superadminRouter from "./src/routes/superadminRoute.js";
 import adminRouter from "./src/routes/adminRoute.js";
+import soundcloudRouter from "./src/routes/soundcloudRoute.js";
 
 // app config
 const app = express();
@@ -30,5 +31,6 @@ app.use("/api/album", albumRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/sa-7f3k2x", superadminRouter);
 app.use("/api/admin", adminRouter);
+app.use("/api/soundcloud", soundcloudRouter);
 
 app.listen(port, () => console.log(`Server started on ${port}`));

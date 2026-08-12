@@ -11,7 +11,7 @@ const UserLayout = ({ children }) => {
     <div className="h-screen w-full bg-black text-white flex flex-col overflow-hidden">
       {/* Hidden Audio Element */}
       {track && (
-        <audio ref={audioRef} src={track.file} preload="auto"></audio>
+        <audio ref={audioRef} src={track.file || track.previewUrl} preload="auto"></audio>
       )}
       
       {/* Main Content Area - Full width layout */}

@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useRef, useEffect } from 'react';
 import { songAPI, albumAPI } from '../utils/api.js';
 import { DEFAULT_VALUES } from '../utils/constants.js';
+import { getPlayableSoundCloudUrl } from '../utils/soundcloudApi.js';
 
 const PlayerContext = createContext();
 
@@ -178,6 +179,40 @@ export const PlayerProvider = ({ children }) => {
     }
   };
 
+  const playTrack = async (song) => {
+    try {
+      console.log('🎵 Loading track:', song.name);
+      
+      let playableUrl = song.file || song.previewUrl;
+      if (song.external && song.transcodingUrl) {
+        // Resolve the temporary MP3 stream URL from our Backend API
+        const resolvedUrl = await getPlayableSoundCloudUrl(song.transcodingUrl);
+        if (resolvedUrl) {
+          playableUrl = resolvedUrl;
+        } else {
+          throw new Error('Failed to resolve SoundCloud playback URL');
+        }
+      }
+
+      // Create a temporary object for playing state to set the resolved URL as the source
+      const trackToPlay = {
+        ...song,
+        file: playableUrl
+      };
+      
+      setTrack(trackToPlay);
+      
+      if (audioRef.current) {
+        audioRef.current.src = playableUrl;
+        await audioRef.current.play();
+        setPlayStatus(true);
+      }
+    } catch (error) {
+      console.error('❌ Error playing track:', error);
+      setError(error.message || 'Failed to play track');
+    }
+  };
+
   const previous = async () => {
     if (!track || currentPlaylist.length === 0) {
       // Use all songs if no specific playlist
@@ -323,6 +358,7 @@ export const PlayerProvider = ({ children }) => {
     play,
     pause,
     playWithId,
+    playTrack,
     previous,
     next,
     seekSong,
