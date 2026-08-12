@@ -10,7 +10,10 @@ import { protect } from "../middleware/authMiddleware.js";
 
 const songRouter = express.Router();
 
-// All routes are protected by JWT authentication
+// Public — browsing the feed requires no auth (same as SoundCloud's public page)
+songRouter.get("/list", listSong);
+
+// Private — all mutations and user-specific routes require JWT
 songRouter.post(
   "/add",
   protect,
@@ -20,7 +23,6 @@ songRouter.post(
   ]),
   addSong
 );
-songRouter.get("/list", protect, listSong);
 songRouter.get("/mine", protect, getMySongs);
 songRouter.post("/remove", protect, removeSong);
 

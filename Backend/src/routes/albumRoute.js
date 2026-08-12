@@ -10,9 +10,11 @@ import { protect } from "../middleware/authMiddleware.js";
 
 const albumRouter = express.Router();
 
-// All album routes are protected by JWT authentication
+// Public — album list used by PlayerContext before auth is established
+albumRouter.get("/list", listAlbum);
+
+// Private — all mutations and song lookups require JWT
 albumRouter.post("/add", protect, upload.single("image"), addAlbum);
-albumRouter.get("/list", protect, listAlbum);
 albumRouter.get("/:id/songs", protect, getAlbumSongs);
 albumRouter.post("/remove", protect, removeAlbum);
 

@@ -95,7 +95,7 @@ const AuthLoadingFallback = () => (
 
 // Main App Router Component
 const AppRouter = () => {
-  const { isAuthenticated, userRole, isLoading, user } = useAuth();
+  const { isAuthenticated, userRole, isLoading, user, isAdmin } = useAuth();
 
   // Show loading spinner while checking authentication
   if (isLoading) {
