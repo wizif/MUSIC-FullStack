@@ -15,9 +15,10 @@ const Display = ({ children }) => {
   useEffect(() => {
     if (displayRef.current) {
       if (isAlbum && album?.bgColour) {
-        displayRef.current.style.background = `linear-gradient(180deg, ${album.bgColour} 0%, #121212 60%)`;
+        const baseColor = album.bgColour.startsWith('#') ? album.bgColour : `#${album.bgColour}`;
+        displayRef.current.style.background = `linear-gradient(180deg, ${baseColor}33 0%, rgba(18, 18, 18, 0.5) 60%)`;
       } else {
-        displayRef.current.style.background = "#121212";
+        displayRef.current.style.background = "rgba(18, 18, 18, 0.5)";
       }
     }
   }, [isAlbum, album]);
@@ -25,7 +26,7 @@ const Display = ({ children }) => {
   return (
     <div
       ref={displayRef}
-      className="bg-[#121212] rounded-lg flex-1 overflow-hidden flex flex-col w-full h-full"
+      className="bg-[#121212]/50 backdrop-blur-md border border-white/[0.04] rounded-lg flex-1 overflow-hidden flex flex-col w-full h-full"
     >
     
       

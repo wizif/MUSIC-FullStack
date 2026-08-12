@@ -9,20 +9,33 @@ import { usePlayer } from '../../context/PlayerContext.jsx';
 
 const Sidebar = () => {
   const navigate = useNavigate();
-  const { albumsData, songsData, playWithId, track, playStatus } = usePlayer();
+  const { 
+    albumsData, 
+    songsData, 
+    playWithId, 
+    track, 
+    playStatus, 
+    playlists, 
+    createPlaylist 
+  } = usePlayer();
   const [imageErrors, setImageErrors] = useState(new Set());
   const [expandedItems, setExpandedItems] = useState(new Set());
   const [viewMode, setViewMode] = useState('list'); // 'list' or 'grid'
   const [selectedCategory, setSelectedCategory] = useState('all'); // 'all', 'playlists', 'artists', 'albums'
-  const [likedSongs, setLikedSongs] = useState([]);
   
-  // Simulate liked songs (in real app, this would come from user data)
-  useEffect(() => {
-    if (songsData.length > 0) {
-      // Take first 5 songs as "liked" for demo
-      setLikedSongs(songsData.slice(0, 5));
+  // Find Liked Songs playlist
+  const likedSongsPlaylist = playlists.find(p => p.name === 'Liked Songs');
+  const likedSongs = likedSongsPlaylist ? likedSongsPlaylist.songs : [];
+
+  const handleCreatePlaylist = async () => {
+    const name = prompt("Enter a name for your new playlist:");
+    if (!name || !name.trim()) return;
+    try {
+      await createPlaylist(name.trim());
+    } catch (err) {
+      alert(err.message || "Failed to create playlist. Make sure you are logged in.");
     }
-  }, [songsData]);
+  };
 
   const handleImageError = (e, itemId) => {
     if (!imageErrors.has(itemId)) {
@@ -65,7 +78,13 @@ const Sidebar = () => {
             subtitle: `Playlist • ${likedSongs.length} songs`,
             image: null,
             isLikedSongs: true
-          }
+          },
+          ...playlists.filter(p => p.name !== 'Liked Songs').map(p => ({
+            ...p,
+            type: 'playlist',
+            subtitle: `Playlist • ${p.songs?.length || 0} songs`,
+            image: p.songs?.[0]?.image || null
+          }))
         ];
       case 'artists':
         // Extract unique artists from songs
@@ -87,6 +106,12 @@ const Sidebar = () => {
             image: null,
             isLikedSongs: true
           },
+          ...playlists.filter(p => p.name !== 'Liked Songs').map(p => ({
+            ...p,
+            type: 'playlist',
+            subtitle: `Playlist • ${p.songs?.length || 0} songs`,
+            image: p.songs?.[0]?.image || null
+          })),
           ...albumsData.map(album => ({
             ...album,
             type: 'album',
@@ -99,6 +124,9 @@ const Sidebar = () => {
   const getSongsForItem = (item) => {
     if (item.isLikedSongs) {
       return likedSongs;
+    } else if (item.type === 'playlist') {
+      const playlist = playlists.find(p => p._id === item._id);
+      return playlist ? playlist.songs : [];
     } else if (item.type === 'album') {
       return songsData.filter(song => song.album === item.name || song.album === item._id);
     } else if (item.type === 'artist') {
@@ -175,7 +203,7 @@ const Sidebar = () => {
   return (
     <div className="w-[350px] flex flex-col gap-2 flex-shrink-0">
       {/* Top Navigation */}
-      <div className="bg-[#121212] rounded-lg p-6">
+      <div className="bg-[#121212]/50 backdrop-blur-md border border-white/[0.04] rounded-lg p-6">
         <div className="space-y-6">
           <div 
             onClick={() => navigate("/")} 
@@ -193,7 +221,15 @@ const Sidebar = () => {
             <span className="font-bold text-[16px]">My Uploads</span>
           </div>
           
-          <div className="flex items-center gap-5 text-gray-300 hover:text-white cursor-pointer transition-colors group">
+          <div 
+            onClick={() => {
+              const input = document.querySelector('input[placeholder*="Search songs"]');
+              if (input) {
+                input.focus();
+              }
+            }}
+            className="flex items-center gap-5 text-gray-300 hover:text-white cursor-pointer transition-colors group"
+          >
             <Search className="w-6 h-6 group-hover:scale-110 transition-transform" />
             <span className="font-bold text-[16px]">Search</span>
           </div>
@@ -201,7 +237,7 @@ const Sidebar = () => {
       </div>
       
       {/* Your Library */}
-      <div className="bg-[#121212] rounded-lg flex-1 flex flex-col min-h-0">
+      <div className="bg-[#121212]/50 backdrop-blur-md border border-white/[0.04] rounded-lg flex-1 flex flex-col min-h-0">
         {/* Library Header */}
         <div className="flex items-center justify-between p-6 pb-4">
           <div className="flex items-center gap-3 text-gray-300 hover:text-white cursor-pointer transition-colors group">
@@ -216,7 +252,11 @@ const Sidebar = () => {
             >
               {viewMode === 'list' ? <Grid className="w-4 h-4" /> : <List className="w-4 h-4" />}
             </button>
-            <button className="text-gray-400 hover:text-white transition-colors hover:scale-110 transform p-1 hover:bg-[#1a1a1a] rounded">
+            <button 
+              onClick={handleCreatePlaylist}
+              className="text-gray-400 hover:text-white transition-colors hover:scale-110 transform p-1 hover:bg-[#1a1a1a] rounded"
+              title="Create playlist"
+            >
               <Plus className="w-4 h-4" />
             </button>
           </div>

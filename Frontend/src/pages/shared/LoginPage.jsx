@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Music, User, Mail, Lock, Eye, EyeOff, Sparkles, ArrowRight, ShieldCheck, ChevronRight } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext.jsx';
 import LoadingSpinner from '../../components/shared/LoadingSpinner.jsx';
+import Scanner from '../../components/shared/Scanner.jsx';
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -105,6 +106,38 @@ const LoginPage = () => {
 
   return (
     <div className="relative min-h-screen bg-[#08080C] text-white flex items-center justify-center p-4 overflow-hidden font-sans">
+      {/* Background Scanner Visual */}
+      <div className="absolute inset-0 pointer-events-none opacity-40 z-0">
+        <Scanner
+          color1="#5227FF"
+          color2="#FF9FFC"
+          color3="#FFFFFF"
+          speed={0.5}
+          sweepSpeed={0.25}
+          sweepWidth={1.6}
+          sweepFalloff={6}
+          scale={1.5}
+          frequency={2}
+          ripple={0.22}
+          bandDensity={11}
+          lineSharpness={5.5}
+          glow={0.22}
+          scanDirection="vertical"
+          colorSpread={0.7}
+          brightness={1}
+          contrast={1.15}
+          softness={1.4}
+          vignette={0.45}
+          scanline={true}
+          grain={true}
+          grainIntensity={0.05}
+          opacity={1.0}
+          mouseInteraction={true}
+          mouseRadius={0.5}
+          mouseStrength={0.5}
+        />
+      </div>
+
       {/* Premium Ambient Background Effects */}
       <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] rounded-full bg-gradient-to-br from-green-500/20 to-emerald-500/0 blur-[120px] pointer-events-none animate-pulse duration-[8000ms]" />
       <div className="absolute bottom-[-20%] right-[-10%] w-[600px] h-[600px] rounded-full bg-gradient-to-tr from-purple-500/10 to-indigo-500/0 blur-[130px] pointer-events-none animate-pulse duration-[10000ms]" />

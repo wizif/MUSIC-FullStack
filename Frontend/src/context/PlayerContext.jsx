@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useRef, useEffect } from 'react';
-import { songAPI, albumAPI } from '../utils/api.js';
+import { songAPI, albumAPI, playlistAPI } from '../utils/api.js';
 import { DEFAULT_VALUES } from '../utils/constants.js';
 import { getPlayableSoundCloudUrl } from '../utils/soundcloudApi.js';
 
@@ -37,11 +37,124 @@ export const PlayerProvider = ({ children }) => {
   // Album songs cache
   const [albumSongsCache, setAlbumSongsCache] = useState({});
 
+  const [playlists, setPlaylists] = useState([]);
+  const [recentlyPlayed, setRecentlyPlayed] = useState(() => {
+    try {
+      const saved = localStorage.getItem('recently_played');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const loadPlaylists = async () => {
+    try {
+      const response = await playlistAPI.getAll();
+      if (response.success && response.playlists) {
+        setPlaylists(response.playlists);
+      }
+    } catch (err) {
+      console.error('Failed to load playlists:', err);
+    }
+  };
+
+  const createPlaylist = async (name, isPrivate = true) => {
+    try {
+      const response = await playlistAPI.create(name, isPrivate);
+      if (response.success && response.playlist) {
+        setPlaylists(prev => [...prev, response.playlist]);
+        return response.playlist;
+      }
+    } catch (err) {
+      console.error('Failed to create playlist:', err);
+      throw err;
+    }
+  };
+
+  const addTrackToPlaylist = async (playlistId, song) => {
+    try {
+      const response = await playlistAPI.addSong(playlistId, song);
+      if (response.success && response.playlist) {
+        setPlaylists(prev => prev.map(p => p._id === playlistId ? response.playlist : p));
+        return true;
+      }
+    } catch (err) {
+      console.error('Failed to add song to playlist:', err);
+      throw err;
+    }
+  };
+
+  const removeTrackFromPlaylist = async (playlistId, songId) => {
+    try {
+      const response = await playlistAPI.removeSong(playlistId, songId);
+      if (response.success && response.playlist) {
+        setPlaylists(prev => prev.map(p => p._id === playlistId ? response.playlist : p));
+        return true;
+      }
+    } catch (err) {
+      console.error('Failed to remove song from playlist:', err);
+      throw err;
+    }
+  };
+
+  const deletePlaylist = async (playlistId) => {
+    try {
+      const response = await playlistAPI.delete(playlistId);
+      if (response.success) {
+        setPlaylists(prev => prev.filter(p => p._id !== playlistId));
+        return true;
+      }
+    } catch (err) {
+      console.error('Failed to delete playlist:', err);
+      throw err;
+    }
+  };
+
+  const addToRecentlyPlayed = (song) => {
+    setRecentlyPlayed(prev => {
+      const filtered = prev.filter(item => item._id !== song._id);
+      const updated = [song, ...filtered].slice(0, 10);
+      localStorage.setItem('recently_played', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
   // Load initial data
   useEffect(() => {
     loadSongs();
     loadAlbums();
+    if (localStorage.getItem('sc_token')) {
+      loadPlaylists();
+    }
   }, []);
+
+  const toggleLikeTrack = async (song) => {
+    try {
+      if (!localStorage.getItem('sc_token')) {
+        alert("Please log in to like songs");
+        return;
+      }
+
+      let likedPlaylist = playlists.find(p => p.name === 'Liked Songs');
+      
+      // If it doesn't exist, create it first
+      if (!likedPlaylist) {
+        likedPlaylist = await createPlaylist('Liked Songs', true);
+      }
+
+      const songExists = likedPlaylist.songs.some(s => s._id === song._id);
+      if (songExists) {
+        // Remove it
+        await removeTrackFromPlaylist(likedPlaylist._id, song._id);
+      } else {
+        // Add it
+        await addTrackToPlaylist(likedPlaylist._id, song);
+      }
+    } catch (err) {
+      console.error("Failed to toggle like on track:", err);
+      alert(err.message || "Failed to like track");
+    }
+  };
 
   // Load songs from API
   const loadSongs = async () => {
@@ -200,6 +313,9 @@ export const PlayerProvider = ({ children }) => {
         file: playableUrl
       };
       
+      // Add to recently played list
+      addToRecentlyPlayed(song);
+
       setTrack(trackToPlay);
       
       if (audioRef.current) {
@@ -353,6 +469,8 @@ export const PlayerProvider = ({ children }) => {
     repeat,
     currentPlaylist,
     albumSongsCache,
+    playlists,
+    recentlyPlayed,
 
     // Actions
     play,
@@ -376,6 +494,13 @@ export const PlayerProvider = ({ children }) => {
     loadSongs,
     loadAlbums,
     loadAlbumSongs,
+    loadPlaylists,
+    createPlaylist,
+    addTrackToPlaylist,
+    removeTrackFromPlaylist,
+    deletePlaylist,
+    addToRecentlyPlayed,
+    toggleLikeTrack,
     setError
   };
 

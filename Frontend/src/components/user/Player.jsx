@@ -61,7 +61,7 @@ const Player = () => {
 
   return (
     <>
-      <div className="h-20 bg-gradient-to-r from-gray-900 via-black to-gray-900 border-t border-gray-700/50 flex items-center justify-between px-4 text-white backdrop-blur-md">
+      <div className="h-20 bg-black/45 border-t border-white/[0.08] flex items-center justify-between px-4 text-white backdrop-blur-md">
         {/* Left - Current track */}
         <div className="flex items-center space-x-4 min-w-0 w-1/4">
           <div className="relative group">

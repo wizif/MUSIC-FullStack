@@ -16,6 +16,7 @@ const Navbar = () => {
   const [showResults, setShowResults] = useState(false);
   
   const searchRef = useRef(null);
+  const searchInputRef = useRef(null);
 
   // Enhanced search functionality with iTunes/SoundCloud integration
   useEffect(() => {
@@ -72,7 +73,7 @@ const Navbar = () => {
       }
       if ((event.ctrlKey || event.metaKey) && event.key === 'k') {
         event.preventDefault();
-        searchRef.current?.focus();
+        searchInputRef.current?.focus();
       }
     };
 
@@ -152,7 +153,7 @@ const Navbar = () => {
   }, []);
 
   return (
-    <div className="sticky top-0 z-50 bg-gradient-to-r from-[#121212] via-[#1a1a1a] to-[#121212] p-6 pb-4 w-full border-b border-gray-800/50 backdrop-blur-md">
+    <div className="sticky top-0 z-50 bg-gradient-to-r from-[#121212]/40 via-[#1a1a1a]/40 to-[#121212]/40 p-6 pb-4 w-full border-b border-white/[0.05] backdrop-blur-md">
       <div className="flex items-center justify-between w-full">
         {/* Navigation Controls */}
         <div className="flex items-center gap-3 flex-shrink-0">
@@ -181,7 +182,7 @@ const Navbar = () => {
                 isSearchFocused ? 'text-green-500' : 'text-[#a7a7a7]'
               }`} />
               <input
-                ref={searchRef}
+                ref={searchInputRef}
                 type="text"
                 placeholder="Search songs, albums, artists..."
                 value={searchTerm}

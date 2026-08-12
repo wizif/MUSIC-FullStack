@@ -155,6 +155,58 @@ export const albumAPI = {
   }
 };
 
+// Playlist API functions
+export const playlistAPI = {
+  getAll: async () => {
+    try {
+      const response = await api.get('/api/playlist');
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to fetch playlists');
+    }
+  },
+  create: async (name, isPrivate = true) => {
+    try {
+      const response = await api.post('/api/playlist/create', { name, isPrivate });
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to create playlist');
+    }
+  },
+  addSong: async (playlistId, song) => {
+    try {
+      const response = await api.post(`/api/playlist/${playlistId}/add`, { song });
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to add song to playlist');
+    }
+  },
+  removeSong: async (playlistId, songId) => {
+    try {
+      const response = await api.post(`/api/playlist/${playlistId}/remove`, { songId });
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to remove song from playlist');
+    }
+  },
+  getOne: async (playlistId) => {
+    try {
+      const response = await api.get(`/api/playlist/${playlistId}`);
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to fetch playlist');
+    }
+  },
+  delete: async (playlistId) => {
+    try {
+      const response = await api.delete(`/api/playlist/${playlistId}`);
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to delete playlist');
+    }
+  }
+};
+
 // Utility functions
 export const validateFile = (file, type = 'audio') => {
   const constraints = type === 'audio' 
