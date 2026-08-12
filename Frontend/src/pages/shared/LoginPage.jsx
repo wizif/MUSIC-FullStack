@@ -118,10 +118,10 @@ const LoginPage = () => {
             <Music className="w-9 h-9 text-[#08080C]" />
           </div>
           <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-white via-white to-gray-400 bg-clip-text text-transparent">
-            SoundCloud Platform
+            MusicOn
           </h1>
           <p className="text-gray-400 text-sm mt-1.5 font-medium">
-            {isLoginMode ? 'Sign in to access your musicfeed' : 'Create an account to start uploading tracks'}
+            {isLoginMode ? 'Sign in to your account' : 'Create an account to start uploading tracks'}
           </p>
         </div>
 
@@ -272,40 +272,45 @@ const LoginPage = () => {
               </button>
             </form>
 
-            {/* Quick Access Dev Drawer (Demo Accounts) */}
-            <div className="mt-8 pt-6 border-t border-white/[0.06]">
-              <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-400 uppercase tracking-widest mb-4">
-                <Sparkles className="w-3.5 h-3.5 text-[#1ED760]" />
-                <span>Quick Access Test Accounts</span>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() => handleQuickLogin('superadmin@test.com', 'password123')}
-                  disabled={loading}
-                  className="flex flex-col text-left p-3 rounded-2xl bg-white/[0.02] hover:bg-[#1ED760]/5 border border-white/[0.05] hover:border-[#1ED760]/20 transition-all duration-200 group"
-                >
-                  <div className="flex items-center justify-between w-full mb-1">
-                    <span className="text-xs font-bold text-white group-hover:text-[#1ED760] transition-colors">Super Admin</span>
-                    <ShieldCheck className="w-3.5 h-3.5 text-[#1ED760]" />
-                  </div>
-                  <span className="text-[10px] text-gray-500 truncate w-full">superadmin@test.com</span>
-                </button>
+            {/* Dev hint — only visible in development */}
+            {import.meta.env.DEV && (
+              <div className="mt-8 pt-6 border-t border-white/[0.06]">
+                <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">
+                  <Sparkles className="w-3.5 h-3.5 text-[#1ED760]" />
+                  <span>Dev — Quick Login</span>
+                </div>
+                <p className="text-[10px] text-gray-500 mb-3 leading-relaxed">
+                  These buttons only appear in development mode. Accounts must already exist in your MongoDB with passwords ≥ 8 characters.
+                </p>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => handleQuickLogin('superadmin@test.com', 'password123')}
+                    disabled={loading}
+                    className="flex flex-col text-left p-3 rounded-2xl bg-white/[0.02] hover:bg-[#1ED760]/5 border border-white/[0.05] hover:border-[#1ED760]/20 transition-all duration-200 group"
+                  >
+                    <div className="flex items-center justify-between w-full mb-1">
+                      <span className="text-xs font-bold text-white group-hover:text-[#1ED760] transition-colors">Super Admin</span>
+                      <ShieldCheck className="w-3.5 h-3.5 text-[#1ED760]" />
+                    </div>
+                    <span className="text-[10px] text-gray-500 truncate w-full">superadmin@test.com</span>
+                  </button>
 
-                <button
-                  type="button"
-                  onClick={() => handleQuickLogin('admin@test.com', 'password123')}
-                  disabled={loading}
-                  className="flex flex-col text-left p-3 rounded-2xl bg-white/[0.02] hover:bg-[#1ED760]/5 border border-white/[0.05] hover:border-[#1ED760]/20 transition-all duration-200 group"
-                >
-                  <div className="flex items-center justify-between w-full mb-1">
-                    <span className="text-xs font-bold text-white group-hover:text-[#1ED760] transition-colors">Admin Monitor</span>
-                    <ChevronRight className="w-3.5 h-3.5 text-gray-500 group-hover:text-[#1ED760] transition-transform duration-200 group-hover:translate-x-0.5" />
-                  </div>
-                  <span className="text-[10px] text-gray-500 truncate w-full">admin@test.com</span>
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => handleQuickLogin('admin@test.com', 'password123')}
+                    disabled={loading}
+                    className="flex flex-col text-left p-3 rounded-2xl bg-white/[0.02] hover:bg-[#1ED760]/5 border border-white/[0.05] hover:border-[#1ED760]/20 transition-all duration-200 group"
+                  >
+                    <div className="flex items-center justify-between w-full mb-1">
+                      <span className="text-xs font-bold text-white group-hover:text-[#1ED760] transition-colors">Admin</span>
+                      <ChevronRight className="w-3.5 h-3.5 text-gray-500 group-hover:text-[#1ED760] transition-transform duration-200 group-hover:translate-x-0.5" />
+                    </div>
+                    <span className="text-[10px] text-gray-500 truncate w-full">admin@test.com</span>
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
 
           </div>
         </div>
