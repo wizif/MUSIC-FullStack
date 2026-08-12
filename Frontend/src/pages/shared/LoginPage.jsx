@@ -53,8 +53,8 @@ const LoginPage = () => {
     if (!formData.password) {
       throw new Error('Password is required');
     }
-    if (formData.password.length < 6) {
-      throw new Error('Password must be at least 6 characters long');
+    if (formData.password.length < 8) {
+      throw new Error('Password must be at least 8 characters long');
     }
   };
 
