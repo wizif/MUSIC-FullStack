@@ -1,37 +1,61 @@
 import { v2 as cloudinary } from "cloudinary";
 import songModel from "../models/songModel.js";
 
+// @desc    Add a new song
+// @route   POST /api/song/add
+// @access  Private
 const addSong = async (req, res) => {
   try {
-    const name = req.body.name;
-    const desc = req.body.desc;
-    const album = req.body.album;
-    const audioFile = req.files.audio[0];
-    const imageFile = req.files.image[0];
+    const { name, desc, album } = req.body;
     
-    console.log("🎵 Adding song:", { name, desc, album });
+    // 1. Enforce 10-song upload limit (save API calls by doing this first)
+    const uploaderId = req.user._id;
+    const songCount = await songModel.countDocuments({ uploader: uploaderId });
     
+    if (songCount >= 10) {
+      return res.json({
+        success: false,
+        message: "Upload limit reached: max 10 tracks per account.",
+      });
+    }
+
+    const audioFile = req.files?.audio?.[0];
+    const imageFile = req.files?.image?.[0];
+
+    if (!audioFile || !imageFile) {
+      return res.status(400).json({
+        success: false,
+        message: "Please upload both audio and image files",
+      });
+    }
+
+    console.log("🎵 Adding song:", { name, desc, album, uploader: uploaderId });
+
+    // 2. Upload to Cloudinary
     const audioUpload = await cloudinary.uploader.upload(audioFile.path, {
       resource_type: "video",
     });
     const imageUpload = await cloudinary.uploader.upload(imageFile.path, {
       resource_type: "image",
     });
+    
     const duration = `${Math.floor(audioUpload.duration / 60)}:${Math.floor(
       audioUpload.duration % 60
     )}`;
 
+    // 3. Save to MongoDB
     const songData = {
       name,
       desc,
-      album,
+      album: album || "",
       image: imageUpload.secure_url,
       file: audioUpload.secure_url,
       duration,
+      uploader: uploaderId,
     };
 
     console.log("💾 Saving song data:", songData);
-    const song = new songModel(songData); // ✅ Fixed: Added 'new' keyword
+    const song = new songModel(songData);
     await song.save();
     console.log("✅ Song saved successfully with ID:", song._id);
 
@@ -42,6 +66,9 @@ const addSong = async (req, res) => {
   }
 };
 
+// @desc    Get all songs (SoundCloud global feed)
+// @route   GET /api/song/list
+// @access  Private
 const listSong = async (req, res) => {
   try {
     console.log("📋 Fetching all songs...");
@@ -52,7 +79,6 @@ const listSong = async (req, res) => {
       success: true, 
       songs: allSongs
     });
-    
   } catch (error) {
     console.error("❌ Error in listSong:", error);
     res.json({ 
@@ -62,14 +88,62 @@ const listSong = async (req, res) => {
   }
 };
 
+// @desc    Get only current user's songs
+// @route   GET /api/song/mine
+// @access  Private
+const getMySongs = async (req, res) => {
+  try {
+    const uploaderId = req.user._id;
+    console.log(`📋 Fetching songs for user: ${uploaderId}`);
+    const mySongs = await songModel.find({ uploader: uploaderId });
+    console.log(`📊 Songs found for user:`, mySongs.length);
+
+    res.json({
+      success: true,
+      songs: mySongs,
+    });
+  } catch (error) {
+    console.error("❌ Error in getMySongs:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// @desc    Remove a song
+// @route   POST /api/song/remove
+// @access  Private
 const removeSong = async (req, res) => {
   try {
-    await songModel.findByIdAndDelete(req.body.id);
+    const songId = req.body.id;
+    const song = await songModel.findById(songId);
+
+    if (!song) {
+      return res.status(404).json({
+        success: false,
+        message: "Song not found",
+      });
+    }
+
+    // Check ownership OR admin/superadmin roles
+    if (
+      song.uploader.toString() !== req.user._id.toString() &&
+      req.user.role !== "admin" &&
+      req.user.role !== "superadmin"
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "You can only remove your own tracks.",
+      });
+    }
+
+    await songModel.findByIdAndDelete(songId);
     res.json({ success: true, message: "Song removed successfully" });
   } catch (error) {
-    console.error("Error removing song:", error);
+    console.error("❌ Error removing song:", error);
     res.json({ success: false, message: error.message });
   }
 };
 
-export { addSong, listSong, removeSong };
+export { addSong, listSong, getMySongs, removeSong };
