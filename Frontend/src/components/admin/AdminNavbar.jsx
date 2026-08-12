@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight, Search, User, Bell } from 'lucide-react';
-import RoleSwitcher from '../shared/RoleSwitcher.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 
 const AdminNavbar = () => {
@@ -52,7 +51,6 @@ const AdminNavbar = () => {
       
       {/* Right - Controls */}
       <div className="flex items-center space-x-4">
-        <RoleSwitcher />
         
         {/* Notifications */}
         <button className="p-2 rounded-full bg-gray-800 hover:bg-gray-700 transition-colors relative hover:scale-110 transform">

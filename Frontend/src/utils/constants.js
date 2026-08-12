@@ -48,15 +48,7 @@ export const STORAGE_KEYS = {
   THEME: 'spotify_theme'
 };
 
-// Admin email patterns
-export const ADMIN_PATTERNS = {
-  EMAILS: [
-    'admin@spotify.com',
-    'admin@music.com', 
-    'superadmin@spotify.com'
-  ],
-  KEYWORDS: ['admin', 'superadmin']
-};
+
 
 // Player states
 export const PLAYER_STATES = {

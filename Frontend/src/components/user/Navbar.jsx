@@ -2,7 +2,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, Search, X, Music, Album } from 'lucide-react';
-import RoleSwitcher from '../shared/RoleSwitcher.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { usePlayer } from '../../context/PlayerContext.jsx';
 
@@ -255,8 +254,6 @@ const Navbar = () => {
             )}
           </div>
 
-          <RoleSwitcher />
-          
           <div className="flex items-center gap-2">
             <button 
               className="bg-gradient-to-r from-[#1ed760] to-[#1db954] hover:from-[#1db954] hover:to-[#17a74a] text-black w-9 h-9 rounded-full flex items-center justify-center font-bold transition-all duration-200 text-sm hover:scale-105 shadow-lg"

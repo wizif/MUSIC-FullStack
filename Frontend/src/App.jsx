@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth, USER_ROLES } from './context/AuthContext.jsx';
+import { AuthProvider, useAuth } from './context/AuthContext.jsx';
 import { PlayerProvider } from './context/PlayerContext.jsx';
 
 // Import layouts
@@ -55,7 +55,7 @@ const ProtectedAdminRoute = ({ children }) => {
   }
 
   // Check if user has admin privileges
-  if (!isAdmin || userRole !== USER_ROLES.ADMIN) {
+  if (!isAdmin) {
     console.log('Access denied - redirecting to user dashboard');
     return <Navigate to="/" replace />;
   }
@@ -86,7 +86,7 @@ const AppRouter = () => {
         path="/login" 
         element={
           isAuthenticated ? (
-            userRole === USER_ROLES.ADMIN ? 
+            isAdmin ? 
             <Navigate to="/admin" replace /> : 
             <Navigate to="/" replace />
           ) : (
@@ -156,7 +156,7 @@ const AppRouter = () => {
       {/* Catch all route - redirect based on authentication */}
       <Route path="*" element={
         isAuthenticated ? (
-          userRole === USER_ROLES.ADMIN ? 
+          isAdmin ? 
           <Navigate to="/admin" replace /> : 
           <Navigate to="/" replace />
         ) : (

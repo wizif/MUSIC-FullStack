@@ -1,150 +1,105 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { STORAGE_KEYS, ADMIN_PATTERNS } from '../utils/constants.js';
+import api from '../utils/api.js';
 
-// User roles
 export const USER_ROLES = {
   USER: 'user',
-  ADMIN: 'admin'
+  ADMIN: 'admin',
+  SUPERADMIN: 'superadmin'
 };
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [userRole, setUserRole] = useState(USER_ROLES.USER);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Initialize from localStorage on mount
+  // Initialize and verify session from localStorage on mount
   useEffect(() => {
     const initializeAuth = async () => {
-      try {
-        const savedUser = localStorage.getItem(STORAGE_KEYS.USER);
-        const savedRole = localStorage.getItem(STORAGE_KEYS.USER_ROLE);
-        
-        if (savedUser && savedRole) {
-          const parsedUser = JSON.parse(savedUser);
-          setUser(parsedUser);
-          setUserRole(savedRole);
-          console.log('✅ User restored from localStorage:', parsedUser.name, 'Role:', savedRole);
-        } else {
-          console.log('ℹ️ No saved user session found');
+      const token = localStorage.getItem('sc_token');
+      if (token) {
+        try {
+          console.log('🔑 Token found, verifying session...');
+          // Fetch current user from backend using token (interceptor will add Authorization header)
+          const response = await api.get('/api/auth/me');
+          if (response.data && response.data.success) {
+            setUser(response.data.user);
+            console.log('✅ Session restored for user:', response.data.user.name);
+          } else {
+            throw new Error('Verification failed');
+          }
+        } catch (err) {
+          console.error('❌ Session verification failed. Clearing credentials:', err.message);
+          localStorage.removeItem('sc_token');
+          setUser(null);
         }
-      } catch (error) {
-        console.error('❌ Error restoring user from localStorage:', error);
-        // Clear corrupted data
-        localStorage.removeItem(STORAGE_KEYS.USER);
-        localStorage.removeItem(STORAGE_KEYS.USER_ROLE);
-      } finally {
-        setIsLoading(false);
+      } else {
+        console.log('ℹ️ No saved user session token found');
       }
+      setIsLoading(false);
     };
 
     initializeAuth();
   }, []);
 
-  // Save to localStorage whenever user or role changes
-  useEffect(() => {
-    if (user && userRole) {
-      localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(user));
-      localStorage.setItem(STORAGE_KEYS.USER_ROLE, userRole);
-      console.log('💾 User session saved to localStorage');
-    }
-  }, [user, userRole]);
-
-  const determineUserRole = (email) => {
-    const emailLower = email.toLowerCase().trim();
-    
-    // Check if email is in admin list
-    if (ADMIN_PATTERNS.EMAILS.includes(emailLower)) {
-      console.log('🛡️ Admin access granted - email in admin list');
-      return USER_ROLES.ADMIN;
-    }
-    
-    // Check if email contains admin keywords
-    const hasAdminKeyword = ADMIN_PATTERNS.KEYWORDS.some(keyword => 
-      emailLower.includes(keyword)
-    );
-    
-    if (hasAdminKeyword) {
-      console.log('🛡️ Admin access granted - admin keyword detected');
-      return USER_ROLES.ADMIN;
-    }
-    
-    console.log('👤 User access granted - regular user');
-    return USER_ROLES.USER;
-  };
-
-  const login = async (credentials) => {
-    console.log('🔐 Login attempt started...');
+  const login = async (email, password) => {
+    console.log('🔐 Real login attempt started...');
     setIsLoading(true);
     setError(null);
-    
     try {
-      // Validate credentials
-      if (!credentials.name?.trim()) {
-        throw new Error('Name is required');
-      }
+      const response = await api.post('/api/auth/login', { email, password });
       
-      if (!credentials.email?.trim()) {
-        throw new Error('Email is required');
+      if (response.data && response.data.success) {
+        const { token, user: userData } = response.data;
+        localStorage.setItem('sc_token', token);
+        setUser(userData);
+        console.log('✅ Login successful:', userData.name, 'Role:', userData.role);
+        return { success: true, user: userData };
+      } else {
+        throw new Error(response.data?.message || 'Login failed');
       }
+    } catch (err) {
+      const errMsg = err.response?.data?.message || err.message || 'Login failed';
+      console.error('❌ Login failed:', errMsg);
+      setError(errMsg);
+      return { success: false, error: errMsg };
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-      // Email format validation
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(credentials.email.trim())) {
-        throw new Error('Please enter a valid email address');
+  const register = async (name, email, password) => {
+    console.log('📝 Registration attempt started...');
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await api.post('/api/auth/register', { name, email, password });
+      
+      if (response.data && response.data.success) {
+        const { token, user: userData } = response.data;
+        localStorage.setItem('sc_token', token);
+        setUser(userData);
+        console.log('✅ Registration successful:', userData.name, 'Role:', userData.role);
+        return { success: true, user: userData };
+      } else {
+        throw new Error(response.data?.message || 'Registration failed');
       }
-
-      // Simulate API call delay (replace with actual API call when you have backend auth)
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Determine role based on email
-      const detectedRole = determineUserRole(credentials.email);
-      
-      const userData = {
-        id: Date.now().toString(),
-        name: credentials.name.trim(),
-        email: credentials.email.toLowerCase().trim(),
-        loginTime: new Date().toISOString(),
-        role: detectedRole
-      };
-      
-      // Set user data and role
-      setUser(userData);
-      setUserRole(detectedRole);
-      
-      console.log('✅ Login successful:', userData.name, 'Role:', detectedRole);
-      
-      return { 
-        success: true, 
-        user: userData, 
-        role: detectedRole 
-      };
-    } catch (error) {
-      console.error('❌ Login failed:', error.message);
-      setError(error.message);
-      return { 
-        success: false, 
-        error: error.message 
-      };
+    } catch (err) {
+      const errMsg = err.response?.data?.message || err.message || 'Registration failed';
+      console.error('❌ Registration failed:', errMsg);
+      setError(errMsg);
+      return { success: false, error: errMsg };
     } finally {
       setIsLoading(false);
     }
   };
 
   const logout = () => {
-    console.log('🚪 Logout initiated...');
-    try {
-      setUser(null);
-      setUserRole(USER_ROLES.USER);
-      localStorage.removeItem(STORAGE_KEYS.USER);
-      localStorage.removeItem(STORAGE_KEYS.USER_ROLE);
-      setError(null);
-      console.log('✅ User logged out successfully');
-    } catch (error) {
-      console.error('❌ Error during logout:', error);
-    }
+    console.log('🚪 Logging out user...');
+    localStorage.removeItem('sc_token');
+    setUser(null);
+    setError(null);
   };
 
   const updateUser = (userData) => {
@@ -152,59 +107,26 @@ export const AuthProvider = ({ children }) => {
       console.warn('⚠️ Cannot update user - no user logged in');
       return;
     }
-    
-    const updatedUser = { ...user, ...userData };
-    setUser(updatedUser);
-    console.log('📝 User data updated:', updatedUser);
-  };
-
-  const switchRole = (role) => {
-    if (!user) {
-      console.warn('⚠️ Cannot switch role - no user logged in');
-      return false;
-    }
-
-    if (!Object.values(USER_ROLES).includes(role)) {
-      console.error('❌ Invalid role:', role);
-      return false;
-    }
-
-    // Check if user has permission to switch to admin
-    if (role === USER_ROLES.ADMIN) {
-      const hasAdminPermission = determineUserRole(user.email) === USER_ROLES.ADMIN;
-      if (!hasAdminPermission) {
-        console.warn('⛔ Access denied - user does not have admin privileges');
-        return false;
-      }
-    }
-
-    setUserRole(role);
-    console.log('🔄 Role switched to:', role);
-    return true;
+    setUser((prev) => ({ ...prev, ...userData }));
   };
 
   // Computed properties
-  const isAdmin = userRole === USER_ROLES.ADMIN && user && determineUserRole(user.email) === USER_ROLES.ADMIN;
+  const userRole = user ? user.role : 'user';
+  const isAdmin = user && (user.role === 'admin' || user.role === 'superadmin');
   const isAuthenticated = !!user;
 
   const contextValue = {
-    // State
     user,
     userRole,
     isLoading,
     error,
     isAdmin,
     isAuthenticated,
-    
-    // Actions
     login,
+    register,
     logout,
     updateUser,
-    switchRole,
     setError,
-    
-    // Utils
-    determineUserRole,
     USER_ROLES
   };
 
