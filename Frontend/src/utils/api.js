@@ -50,6 +50,16 @@ export const songAPI = {
     }
   },
 
+  // Get current user's songs
+  getMine: async () => {
+    try {
+      const response = await api.get(API_ENDPOINTS.SONGS.MINE);
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to fetch your songs');
+    }
+  },
+
   // Add new song
   add: async (songData) => {
     try {

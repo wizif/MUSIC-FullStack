@@ -18,7 +18,8 @@ export const API_ENDPOINTS = {
   SONGS: {
     LIST: '/api/song/list',
     ADD: '/api/song/add',
-    REMOVE: '/api/song/remove'
+    REMOVE: '/api/song/remove',
+    MINE: '/api/song/mine'
   },
   ALBUMS: {
     LIST: '/api/album/list',

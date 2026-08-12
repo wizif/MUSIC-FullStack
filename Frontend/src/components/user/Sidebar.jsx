@@ -185,6 +185,14 @@ const Sidebar = () => {
             <span className="font-bold text-[16px]">Home</span>
           </div>
           
+          <div 
+            onClick={() => navigate("/profile/mine")} 
+            className="flex items-center gap-5 text-gray-300 hover:text-white cursor-pointer transition-colors group"
+          >
+            <Music className="w-6 h-6 group-hover:scale-110 transition-transform text-[#1ED760]" />
+            <span className="font-bold text-[16px]">My Uploads</span>
+          </div>
+          
           <div className="flex items-center gap-5 text-gray-300 hover:text-white cursor-pointer transition-colors group">
             <Search className="w-6 h-6 group-hover:scale-110 transition-transform" />
             <span className="font-bold text-[16px]">Search</span>

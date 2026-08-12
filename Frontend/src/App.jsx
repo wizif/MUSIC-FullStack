@@ -11,6 +11,7 @@ import AdminLayout from './components/admin/AdminLayout.jsx';
 import LoginPage from './pages/shared/LoginPage.jsx';
 import DisplayHome from './pages/user/DisplayHome.jsx';
 import DisplayAlbum from './pages/user/DisplayAlbum.jsx';
+import MyTracks from './pages/user/MyTracks.jsx';
 import Dashboard from './pages/admin/Dashboard.jsx';
 import AddSong from './pages/admin/AddSong.jsx';
 import AddAlbum from './pages/admin/AddAlbum.jsx';
@@ -108,6 +109,14 @@ const AppRouter = () => {
         <ProtectedUserRoute>
           <UserLayout>
             <DisplayAlbum />
+          </UserLayout>
+        </ProtectedUserRoute>
+      } />
+
+      <Route path="/profile/mine" element={
+        <ProtectedUserRoute>
+          <UserLayout>
+            <MyTracks />
           </UserLayout>
         </ProtectedUserRoute>
       } />
