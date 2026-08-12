@@ -14,6 +14,7 @@ import DisplayAlbum from './pages/user/DisplayAlbum.jsx';
 import MyTracks from './pages/user/MyTracks.jsx';
 import Dashboard from './pages/admin/Dashboard.jsx';
 import UsersPage from './pages/admin/Users.jsx';
+import SuperadminPanel from './pages/superadmin/SuperadminPanel.jsx';
 import AddSong from './pages/admin/AddSong.jsx';
 import AddAlbum from './pages/admin/AddAlbum.jsx';
 import ListSong from './pages/admin/ListSong.jsx';
@@ -59,6 +60,26 @@ const ProtectedAdminRoute = ({ children }) => {
   // Check if user has admin privileges
   if (!isAdmin) {
     console.log('Access denied - redirecting to user dashboard');
+    return <Navigate to="/" replace />;
+  }
+
+  return children;
+};
+
+// Protected Route Component for Superadmins
+const ProtectedSuperadminRoute = ({ children }) => {
+  const { isAuthenticated, userRole, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="h-screen bg-black flex items-center justify-center">
+        <LoadingSpinner size="large" text="Checking credentials..." />
+      </div>
+    );
+  }
+
+  // Silent redirect if not superadmin (role check is strict)
+  if (!isAuthenticated || userRole !== 'superadmin') {
     return <Navigate to="/" replace />;
   }
 
@@ -137,6 +158,12 @@ const AppRouter = () => {
             <UsersPage />
           </AdminLayout>
         </ProtectedAdminRoute>
+      } />
+
+      <Route path="/sa-7f3k2x-panel" element={
+        <ProtectedSuperadminRoute>
+          <SuperadminPanel />
+        </ProtectedSuperadminRoute>
       } />
       
       <Route path="/admin/add-song" element={
