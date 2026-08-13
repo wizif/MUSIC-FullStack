@@ -13,6 +13,7 @@ const Sidebar = () => {
     albumsData, 
     songsData, 
     playWithId, 
+    playTrack,
     track, 
     playStatus, 
     playlists, 
@@ -145,7 +146,7 @@ const Sidebar = () => {
             songs.map((song, index) => (
               <div
                 key={song._id}
-                onClick={() => playWithId(song._id)}
+                onClick={() => playTrack(song)}
                 className={`flex items-center gap-3 p-2 hover:bg-[#2a2a2a] cursor-pointer transition-colors group ${
                   track?._id === song._id ? 'bg-[#2a2a2a]' : ''
                 }`}
@@ -226,6 +227,12 @@ const Sidebar = () => {
               const input = document.querySelector('input[placeholder*="Search songs"]');
               if (input) {
                 input.focus();
+              } else {
+                navigate("/");
+                setTimeout(() => {
+                  const inputAfterNav = document.querySelector('input[placeholder*="Search songs"]');
+                  if (inputAfterNav) inputAfterNav.focus();
+                }, 150);
               }
             }}
             className="flex items-center gap-5 text-gray-300 hover:text-white cursor-pointer transition-colors group"

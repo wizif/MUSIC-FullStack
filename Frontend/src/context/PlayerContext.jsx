@@ -2,10 +2,13 @@ import React, { createContext, useContext, useState, useRef, useEffect } from 'r
 import { songAPI, albumAPI, playlistAPI } from '../utils/api.js';
 import { DEFAULT_VALUES } from '../utils/constants.js';
 import { getPlayableSoundCloudUrl } from '../utils/soundcloudApi.js';
+import { useAuth } from './AuthContext.jsx';
 
 const PlayerContext = createContext();
 
 export const PlayerProvider = ({ children }) => {
+  const { user } = useAuth();
+
   // Audio refs
   const audioRef = useRef(null);
   const seekBg = useRef(null);
@@ -119,18 +122,24 @@ export const PlayerProvider = ({ children }) => {
     });
   };
 
-  // Load initial data
+  // Load initial data (songs and albums)
   useEffect(() => {
     loadSongs();
     loadAlbums();
-    if (localStorage.getItem('sc_token')) {
-      loadPlaylists();
-    }
   }, []);
+
+  // Sync user playlists when auth state changes
+  useEffect(() => {
+    if (user) {
+      loadPlaylists();
+    } else {
+      setPlaylists([]);
+    }
+  }, [user]);
 
   const toggleLikeTrack = async (song) => {
     try {
-      if (!localStorage.getItem('sc_token')) {
+      if (!user) {
         alert("Please log in to like songs");
         return;
       }
