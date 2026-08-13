@@ -153,9 +153,7 @@ const loginUser = async (req, res) => {
 // @access  Private
 const getMe = async (req, res) => {
   try {
-    const user = await userModel.findById(req.userId).select("-password");
-
-    if (!user) {
+    if (!req.user) {
       return res.status(404).json({
         success: false,
         message: "User not found",
@@ -164,10 +162,17 @@ const getMe = async (req, res) => {
 
     res.json({
       success: true,
-      user,
+      user: req.user,
     });
   } catch (error) {
     console.error("❌ Get Me Error:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 // @desc    Authenticate superadmin via secret URL key
 // @route   GET /api/auth/superadmin-access/:secretKey
 // @access  Public
