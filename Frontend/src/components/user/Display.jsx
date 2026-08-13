@@ -31,7 +31,7 @@ const Display = ({ children }) => {
     
       
       {/* Content Area */}
-      <div className="flex-1 overflow-y-auto overflow-x-hidden w-full">
+      <div id="main-content-scroll" className="flex-1 overflow-y-auto overflow-x-hidden w-full">
         {children}
       </div>
     </div>

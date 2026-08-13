@@ -140,6 +140,7 @@ const Navbar = () => {
 
   const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = useRef(null);
+  const [isScrolled, setIsScrolled] = useState(false);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -152,8 +153,29 @@ const Navbar = () => {
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
+  // Listen to the scrollable content container
+  useEffect(() => {
+    const scrollContainer = document.getElementById('main-content-scroll');
+    if (!scrollContainer) return;
+
+    const handleScroll = () => {
+      setIsScrolled(scrollContainer.scrollTop > 20);
+    };
+
+    scrollContainer.addEventListener('scroll', handleScroll);
+    handleScroll(); // Initialize state
+
+    return () => {
+      scrollContainer.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
+
   return (
-    <div className="sticky top-0 z-50 bg-gradient-to-r from-[#121212]/40 via-[#1a1a1a]/40 to-[#121212]/40 p-6 pb-4 w-full border-b border-white/[0.05] backdrop-blur-md">
+    <div className={`sticky top-0 z-50 p-6 pb-4 w-full transition-all duration-300 ${
+      isScrolled 
+        ? 'bg-gradient-to-r from-[#121212]/75 via-[#1a1a1a]/75 to-[#121212]/75 border-b border-white/[0.05] backdrop-blur-md shadow-lg shadow-black/35' 
+        : 'bg-transparent border-b border-transparent backdrop-blur-none'
+    }`}>
       <div className="flex items-center justify-between w-full">
         {/* Navigation Controls */}
         <div className="flex items-center gap-3 flex-shrink-0">
