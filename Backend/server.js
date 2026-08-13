@@ -18,7 +18,16 @@ connectDB();
 connectCloudinary();
 
 app.use(cors({
-  origin: ["https://music-on-wisemen.vercel.app", "http://localhost:3000", "http://localhost:5173"], // frontend URLs
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+    const isLocalhost = /^http:\/\/localhost(:\d+)?$/.test(origin) || /^http:\/\/127\.0\.0\.1(:\d+)?$/.test(origin);
+    const isProd = origin === "https://music-on-wisemen.vercel.app";
+    if (isLocalhost || isProd) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true
 }));

@@ -170,9 +170,9 @@ const MyTracks = () => {
   const isLimitReached = mySongs.length >= 10;
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-8 bg-[#121212] min-h-screen text-white">
+    <div className="p-6 max-w-7xl mx-auto space-y-8 text-white">
       {/* Page Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-gradient-to-r from-gray-900 to-black p-6 rounded-3xl border border-white/[0.05] shadow-lg">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-gradient-to-r from-gray-900/50 to-black/50 backdrop-blur-md p-6 rounded-3xl border border-white/[0.05] shadow-lg">
         <div>
           <div className="flex items-center gap-2 mb-1">
             <Sparkles className="w-5 h-5 text-[#1ED760]" />
@@ -224,7 +224,7 @@ const MyTracks = () => {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         
         {/* Left Side: Upload form or limit message */}
-        <div className="lg:col-span-5 bg-gradient-to-b from-[#18181F] to-[#121216] border border-white/[0.06] rounded-3xl p-6 shadow-xl space-y-6">
+        <div className="lg:col-span-5 bg-gradient-to-b from-[#18181F]/50 to-[#121216]/50 backdrop-blur-md border border-white/[0.06] rounded-3xl p-6 shadow-xl space-y-6">
           <div className="border-b border-white/[0.06] pb-4">
             <h2 className="text-xl font-bold text-white flex items-center gap-2">
               <Plus className="w-5 h-5 text-[#1ED760]" />
@@ -415,7 +415,7 @@ const MyTracks = () => {
         </div>
 
         {/* Right Side: Uploaded songs list displaying via SongItem where it makes sense */}
-        <div className="lg:col-span-7 bg-gradient-to-b from-[#18181F] to-[#121216] border border-white/[0.06] rounded-3xl p-6 shadow-xl space-y-6">
+        <div className="lg:col-span-7 bg-gradient-to-b from-[#18181F]/50 to-[#121216]/50 backdrop-blur-md border border-white/[0.06] rounded-3xl p-6 shadow-xl space-y-6">
           <div className="border-b border-white/[0.06] pb-4 flex justify-between items-center">
             <div>
               <h2 className="text-xl font-bold text-white flex items-center gap-2">

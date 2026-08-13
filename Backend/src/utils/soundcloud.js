@@ -4,6 +4,22 @@ let cachedClientId = '';
 let cacheExpiry = 0;
 
 /**
+ * Fetch helper with built-in AbortController timeout.
+ */
+const fetchWithTimeout = async (url, options = {}, timeoutMs = 3500) => {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(url, { ...options, signal: controller.signal });
+    clearTimeout(timer);
+    return response;
+  } catch (error) {
+    clearTimeout(timer);
+    throw error;
+  }
+};
+
+/**
  * Programmatically fetch a working SoundCloud client_id from their client bundles.
  */
 export const getSoundCloudClientId = async () => {
@@ -14,7 +30,7 @@ export const getSoundCloudClientId = async () => {
 
   try {
     console.log('🔍 Scraping SoundCloud for a fresh client_id...');
-    const response = await fetch('https://soundcloud.com', {
+    const response = await fetchWithTimeout('https://soundcloud.com', {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
       }
@@ -36,20 +52,24 @@ export const getSoundCloudClientId = async () => {
     const fallbackRegex = /client_id[:=]["']([a-zA-Z0-9]{32})["']/i;
 
     for (const url of scriptUrls) {
-      const scriptRes = await fetch(url);
-      const scriptText = await scriptRes.text();
-      const matchId = scriptText.match(clientIdRegex) || scriptText.match(fallbackRegex);
-      
-      if (matchId && matchId[1]) {
-        cachedClientId = matchId[1];
-        cacheExpiry = now + 60 * 60 * 1000; // cache for 1 hour
-        console.log('✅ Found active client_id:', cachedClientId);
-        return cachedClientId;
+      try {
+        const scriptRes = await fetchWithTimeout(url);
+        const scriptText = await scriptRes.text();
+        const matchId = scriptText.match(clientIdRegex) || scriptText.match(fallbackRegex);
+        
+        if (matchId && matchId[1]) {
+          cachedClientId = matchId[1];
+          cacheExpiry = now + 60 * 60 * 1000; // cache for 1 hour
+          console.log('✅ Found active client_id:', cachedClientId);
+          return cachedClientId;
+        }
+      } catch (err) {
+        console.warn(`⚠️ Failed to parse script URL ${url}:`, err.message);
       }
     }
     throw new Error('Could not find client_id in SoundCloud scripts');
   } catch (error) {
-    console.error('❌ Error resolving SoundCloud client_id:', error);
+    console.error('❌ Error resolving SoundCloud client_id:', error.message);
     return cachedClientId || 'pJ6Fj6roW2KRzWAOwGj6kkQ8VRBJjyBD';
   }
 };
@@ -62,7 +82,7 @@ export const searchSoundCloudTracks = async (query, limit = 8) => {
     const clientId = await getSoundCloudClientId();
     const url = `https://api-v2.soundcloud.com/search/tracks?q=${encodeURIComponent(query)}&client_id=${clientId}&limit=${limit}`;
     
-    const response = await fetch(url);
+    const response = await fetchWithTimeout(url);
     if (!response.ok) throw new Error(`SoundCloud API returned status ${response.status}`);
     const data = await response.json();
 
@@ -77,7 +97,7 @@ export const searchSoundCloudTracks = async (query, limit = 8) => {
     }
     return normalized;
   } catch (error) {
-    console.error('❌ SoundCloud search failed:', error);
+    console.error('❌ SoundCloud search failed:', error.message || error);
     return [];
   }
 };
@@ -92,7 +112,7 @@ export const getSoundCloudDiscovery = async (limit = 10) => {
     console.log(`🎵 SoundCloud Discovery Genre rotating select: "${randomGenre}"`);
     return await searchSoundCloudTracks(randomGenre, limit);
   } catch (error) {
-    console.error('❌ SoundCloud discovery failed:', error);
+    console.error('❌ SoundCloud discovery failed:', error.message || error);
     return [];
   }
 };
@@ -104,12 +124,12 @@ export const resolveStreamUrl = async (transcodingUrl) => {
   try {
     const clientId = await getSoundCloudClientId();
     const url = `${transcodingUrl}?client_id=${clientId}`;
-    const response = await fetch(url);
+    const response = await fetchWithTimeout(url);
     if (!response.ok) throw new Error(`Transcoding resolve status ${response.status}`);
     const data = await response.json();
     return data.url;
   } catch (error) {
-    console.error('❌ Failed to resolve stream URL:', error);
+    console.error('❌ Failed to resolve stream URL:', error.message || error);
     return null;
   }
 };
