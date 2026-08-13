@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext.jsx';
 import { PlayerProvider } from './context/PlayerContext.jsx';
+import api from './utils/api.js';
 
 // Import layouts
 import UserLayout from './components/user/Userlayout.jsx';
@@ -66,14 +67,76 @@ const ProtectedAdminRoute = ({ children }) => {
   return children;
 };
 
-// Protected Route Component for Superadmins
+// Protected Route Component for Superadmins (handles passwordless secret URL query param check)
 const ProtectedSuperadminRoute = ({ children }) => {
   const { isAuthenticated, userRole, isLoading } = useAuth();
+  const [verifying, setVerifying] = useState(false);
+  const [authError, setAuthError] = useState('');
+
+  useEffect(() => {
+    const queryParams = new URLSearchParams(window.location.search);
+    const secret = queryParams.get('secret');
+    
+    if (secret) {
+      const verifySecret = async () => {
+        setVerifying(true);
+        setAuthError('');
+        try {
+          const response = await api.get(`/api/auth/superadmin-access/${secret}`);
+          if (response.data && response.data.success) {
+            localStorage.setItem('sc_token', response.data.token);
+            // Redirect to strip query parameter and refresh AuthContext user state
+            window.location.href = window.location.pathname;
+          } else {
+            setAuthError('Unauthorized: Invalid secret key');
+            setVerifying(false);
+          }
+        } catch (err) {
+          setAuthError(err.response?.data?.message || 'Verification failed');
+          setVerifying(false);
+        }
+      };
+      verifySecret();
+    }
+  }, []);
+
+  const queryParams = new URLSearchParams(window.location.search);
+  const hasSecret = queryParams.has('secret');
+
+  if (verifying) {
+    return (
+      <div className="h-screen bg-black flex flex-col items-center justify-center space-y-4">
+        <LoadingSpinner size="large" />
+        <span className="text-purple-400 font-bold text-sm animate-pulse">Validating secret access key...</span>
+      </div>
+    );
+  }
+
+  if (authError) {
+    return (
+      <div className="h-screen bg-black flex flex-col items-center justify-center text-center p-6 space-y-4">
+        <div className="text-rose-500 font-bold text-lg">⚠️ Access Denied</div>
+        <p className="text-gray-400 text-sm max-w-md">{authError}</p>
+        <a href="/" className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-bold transition-all duration-200">
+          Back to Safety
+        </a>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
       <div className="h-screen bg-black flex items-center justify-center">
         <LoadingSpinner size="large" text="Checking credentials..." />
+      </div>
+    );
+  }
+
+  // If there's a secret query param, wait for verification
+  if (hasSecret) {
+    return (
+      <div className="h-screen bg-black flex items-center justify-center">
+        <LoadingSpinner size="large" text="Authorizing..." />
       </div>
     );
   }

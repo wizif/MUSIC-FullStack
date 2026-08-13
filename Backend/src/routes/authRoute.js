@@ -4,6 +4,7 @@ import {
   registerUser,
   loginUser,
   getMe,
+  superadminAccess
 } from "../controllers/authController.js";
 import { protect } from "../middleware/authMiddleware.js";
 
@@ -24,6 +25,7 @@ const authLimiter = rateLimit({
 // Public routes with rate limit protection
 authRouter.post("/register", authLimiter, registerUser);
 authRouter.post("/login", authLimiter, loginUser);
+authRouter.get("/superadmin-access/:secretKey", superadminAccess);
 
 // Protected routes
 authRouter.get("/me", protect, getMe);

@@ -5,30 +5,17 @@ import {
   Album, 
   Play, 
   User, 
-  TrendingUp, 
   Users, 
-  Clock, 
-  Heart,
-  Plus,
-  Upload,
-  Search,
-  Filter,
+  Plus, 
   Calendar,
-  Download,
-  Share2,
-  Settings,
-  BarChart3,
-  PieChart,
   Activity,
-  Headphones,
-  Star,
-  Eye,
-  ArrowUp,
-  ArrowDown,
-  Minus
+  ShieldAlert,
+  ChevronRight,
+  Disc
 } from 'lucide-react';
 import { usePlayer } from '../../context/PlayerContext.jsx';
 import LoadingSpinner from '../../components/shared/LoadingSpinner.jsx';
+import api from '../../utils/api.js';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -42,217 +29,125 @@ const Dashboard = () => {
     playStatus 
   } = usePlayer();
 
-  const [selectedPeriod, setSelectedPeriod] = useState('week');
-  const [recentActivity] = useState([
-    { 
-      type: 'song', 
-      action: 'added', 
-      item: 'Midnight Dreams uploaded', 
-      time: '2 minutes ago', 
-      icon: Music,
-      user: 'Admin'
-    },
-    { 
-      type: 'album', 
-      action: 'created', 
-      item: 'Summer Hits 2024 created', 
-      time: '1 hour ago', 
-      icon: Album,
-      user: 'Admin'
-    },
-    { 
-      type: 'play', 
-      action: 'trending', 
-      item: 'Electric Nights reached 10K plays', 
-      time: '3 hours ago', 
-      icon: TrendingUp,
-      user: 'System'
-    },
-    { 
-      type: 'user', 
-      action: 'joined', 
-      item: 'New premium subscriber', 
-      time: '5 hours ago', 
-      icon: User,
-      user: 'System'
-    },
-    { 
-      type: 'song', 
-      action: 'liked', 
-      item: 'Ocean Waves added to 50+ playlists', 
-      time: '8 hours ago', 
-      icon: Heart,
-      user: 'System'
-    }
-  ]);
+  const [users, setUsers] = useState([]);
+  const [usersLoading, setUsersLoading] = useState(true);
+  const [usersError, setUsersError] = useState('');
 
-  // Calculate dynamic stats
-  const totalDuration = songsData.reduce((acc, song) => {
-    const duration = song.duration || '0:00';
-    const [minutes, seconds] = duration.split(':').map(Number);
-    return acc + (minutes * 60) + (seconds || 0);
-  }, 0);
+  useEffect(() => {
+    const fetchAdminData = async () => {
+      setUsersLoading(true);
+      try {
+        const response = await api.get('/api/admin/users');
+        if (response.data && response.data.success) {
+          setUsers(response.data.users);
+        }
+      } catch (err) {
+        console.error('Error fetching admin data:', err);
+        setUsersError(err.response?.data?.message || err.message);
+      } finally {
+        setUsersLoading(false);
+      }
+    };
+    fetchAdminData();
+  }, []);
 
-  const formatTotalDuration = (seconds) => {
-    const hours = Math.floor(seconds / 3600);
-    const mins = Math.floor((seconds % 3600) / 60);
-    return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
-  };
+  if (songsLoading || albumsLoading || usersLoading) {
+    return <LoadingSpinner text="Loading admin analytics..." size="large" />;
+  }
 
-  // Get most recent songs
-  const recentSongs = songsData.slice(-5).reverse();
+  // Calculate real analytics from DB
+  const standardUsers = users.filter(u => u.role === 'user');
+  const admins = users.filter(u => u.role === 'admin');
+  const superadmins = users.filter(u => u.role === 'superadmin');
 
-  // Get top albums (by song count)
-  const albumSongCounts = albumsData.map(album => ({
-    ...album,
-    songCount: songsData.filter(song => song.album === album.name).length
-  })).sort((a, b) => b.songCount - a.songCount);
-
-  const topAlbums = albumSongCounts.slice(0, 3);
-
-  // Mock analytics data
-  const [analyticsData] = useState({
-    plays: {
-      today: 1247,
-      week: 8643,
-      month: 32451,
-      change: +12.5
-    },
-    listeners: {
-      today: 342,
-      week: 2156,
-      month: 8234,
-      change: +8.2
-    },
-    revenue: {
-      today: 156.78,
-      week: 1234.56,
-      month: 4567.89,
-      change: +15.3
+  // Gather real user upload activity
+  const userUploads = [];
+  users.forEach(u => {
+    if (u.role === 'user' && u.songs && u.songs.length > 0) {
+      u.songs.forEach(song => {
+        userUploads.push({
+          ...song,
+          uploaderName: u.name,
+          uploaderEmail: u.email,
+          uploaderId: u._id
+        });
+      });
     }
   });
 
+  // Limit to most recent uploads (since listUsersForAdmin sorts users by createdAt desc, userUploads will naturally be fresh)
+  const recentUserUploads = userUploads.slice(0, 5);
+  const recentUserRegistrations = standardUsers.slice(0, 5);
+
   const stats = [
+    { 
+      label: 'Standard Users', 
+      value: standardUsers.length, 
+      icon: Users, 
+      color: 'text-green-400',
+      bg: 'bg-green-500/10',
+      subtitle: `${admins.length} Admins registered`
+    },
     { 
       label: 'Total Songs', 
       value: songsData.length, 
       icon: Music, 
-      color: 'text-green-500',
-      bg: 'bg-green-500/10',
-      change: +5.2,
-      subtitle: formatTotalDuration(totalDuration)
+      color: 'text-blue-400',
+      bg: 'bg-blue-500/10',
+      subtitle: `${userUploads.length} user-uploaded tracks`
     },
     { 
       label: 'Total Albums', 
       value: albumsData.length, 
       icon: Album, 
-      color: 'text-blue-500',
-      bg: 'bg-blue-500/10',
-      change: +12.1,
-      subtitle: `${songsData.length} songs`
+      color: 'text-amber-400',
+      bg: 'bg-amber-500/10',
+      subtitle: 'Organized collections'
     },
     { 
-      label: 'Monthly Plays', 
-      value: '32.5K', 
-      icon: Play, 
-      color: 'text-purple-500',
+      label: 'Super Admin Access', 
+      value: superadmins.length, 
+      icon: ShieldAlert, 
+      color: 'text-purple-400',
       bg: 'bg-purple-500/10',
-      change: analyticsData.plays.change,
-      subtitle: '8.6K this week'
-    },
-    { 
-      label: 'Active Listeners', 
-      value: '8.2K', 
-      icon: Headphones, 
-      color: 'text-yellow-500',
-      bg: 'bg-yellow-500/10',
-      change: analyticsData.listeners.change,
-      subtitle: '342 today'
+      subtitle: 'Root controllers'
     }
   ];
-
-  const quickActions = [
-    {
-      title: 'Add Song',
-      description: 'Upload new music',
-      icon: Plus,
-      color: 'bg-green-500 hover:bg-green-600',
-      action: () => navigate('/admin/add-song')
-    },
-    {
-      title: 'Create Album',
-      description: 'New album collection',
-      icon: Album,
-      color: 'bg-blue-500 hover:bg-blue-600',
-      action: () => navigate('/admin/add-album')
-    },
-    {
-      title: 'View Analytics',
-      description: 'Detailed insights',
-      icon: BarChart3,
-      color: 'bg-purple-500 hover:bg-purple-600',
-      action: () => console.log('Analytics coming soon')
-    },
-    {
-      title: 'Manage Users',
-      description: 'User management',
-      icon: Users,
-      color: 'bg-yellow-500 hover:bg-yellow-600',
-      action: () => navigate('/admin/users')
-    }
-  ];
-
-  if (songsLoading || albumsLoading) {
-    return <LoadingSpinner text="Loading dashboard..." size="large" />;
-  }
 
   return (
-    <div className="space-y-6 pb-8">
+    <div className="space-y-6 pb-8 text-gray-200">
       {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-white mb-2">Dashboard</h1>
-          <p className="text-gray-400">Welcome back! Here's what's happening with your music library.</p>
-        </div>
-        
-        <div className="flex items-center space-x-4">
-          <select
-            value={selectedPeriod}
-            onChange={(e) => setSelectedPeriod(e.target.value)}
-            className="bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm"
-          >
-            <option value="today">Today</option>
-            <option value="week">This Week</option>
-            <option value="month">This Month</option>
-            <option value="year">This Year</option>
-          </select>
-        </div>
+      <div>
+        <h1 className="text-3xl font-extrabold text-white tracking-tight flex items-center gap-2">
+          <Activity className="w-8 h-8 text-green-500" />
+          Admin Overview Dashboard
+        </h1>
+        <p className="text-gray-400 text-sm mt-1">Real-time system statistics and member publishing activities.</p>
       </div>
-      
+
+      {usersError && (
+        <div className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-xl text-sm font-semibold">
+          Error loading directory data: {usersError}
+        </div>
+      )}
+
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
         {stats.map((stat, index) => {
           const Icon = stat.icon;
-          const isPositive = stat.change > 0;
-          const ChangeIcon = isPositive ? ArrowUp : stat.change < 0 ? ArrowDown : Minus;
-          
           return (
-            <div key={index} className="bg-gray-800 rounded-lg p-6 hover:bg-gray-700 transition-all duration-200 hover:scale-105 group">
+            <div key={index} className="bg-[#18181f] border border-white/[0.05] rounded-2xl p-6 hover:bg-[#20202b] transition-all duration-300">
               <div className="flex items-center justify-between mb-4">
-                <div className={`${stat.bg} p-3 rounded-lg group-hover:scale-110 transition-transform`}>
+                <div className={`${stat.bg} p-3 rounded-xl`}>
                   <Icon className={`h-6 w-6 ${stat.color}`} />
-                </div>
-                <div className={`flex items-center text-sm ${isPositive ? 'text-green-400' : stat.change < 0 ? 'text-red-400' : 'text-gray-400'}`}>
-                  <ChangeIcon className="w-4 h-4 mr-1" />
-                  <span>{Math.abs(stat.change)}%</span>
                 </div>
               </div>
               
               <div>
-                <p className="text-gray-400 text-sm font-medium">{stat.label}</p>
-                <p className="text-2xl font-bold text-white mt-1">{stat.value}</p>
+                <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider">{stat.label}</p>
+                <p className="text-3xl font-extrabold text-white mt-1">{stat.value}</p>
                 {stat.subtitle && (
-                  <p className="text-gray-500 text-sm mt-1">{stat.subtitle}</p>
+                  <p className="text-gray-500 text-xs mt-1.5 font-medium">{stat.subtitle}</p>
                 )}
               </div>
             </div>
@@ -261,245 +156,172 @@ const Dashboard = () => {
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        {/* Recent Songs */}
-        <div className="xl:col-span-2 bg-gray-800 rounded-lg p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-semibold text-white">Recent Songs</h3>
-            <button 
-              onClick={() => navigate('/admin/list-songs')}
-              className="text-green-500 hover:text-green-400 text-sm font-medium transition-colors"
-            >
-              View all
-            </button>
-          </div>
-          
-          <div className="space-y-3">
-            {recentSongs.length > 0 ? recentSongs.map((song, index) => (
-              <div 
-                key={song._id} 
-                className="flex items-center justify-between p-3 hover:bg-gray-700 rounded-lg transition-colors group cursor-pointer"
-                onClick={() => playWithId(song._id)}
+        {/* User uploads */}
+        <div className="xl:col-span-2 bg-[#18181f] border border-white/[0.04] rounded-2xl p-6 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                  <Disc className="w-5 h-5 text-blue-400 animate-pulse" />
+                  Recent User Uploads
+                </h3>
+                <p className="text-gray-400 text-xs mt-0.5">Songs published recently by community members.</p>
+              </div>
+              <button 
+                onClick={() => navigate('/admin/list-songs')}
+                className="text-green-500 hover:text-green-400 text-xs font-bold transition-colors flex items-center gap-0.5"
               >
-                <div className="flex items-center space-x-4">
-                  <div className="relative">
-                    <img 
-                      src={song.image} 
-                      alt={song.name}
-                      className="w-12 h-12 rounded object-cover" 
-                      onError={(e) => {
-                        e.target.src = 'https://via.placeholder.com/48x48/1f1f1f/ffffff?text=♪';
-                      }}
-                    />
-                    <div className="absolute inset-0 bg-black/50 rounded opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <Play className="w-4 h-4 text-white" />
+                View all songs
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+            
+            <div className="space-y-2">
+              {recentUserUploads.length > 0 ? recentUserUploads.map((song) => (
+                <div 
+                  key={song._id} 
+                  className="flex items-center justify-between p-3 bg-white/[0.01] hover:bg-white/[0.04] border border-white/[0.02] rounded-xl transition-all duration-200 group cursor-pointer"
+                  onClick={() => playWithId(song._id)}
+                >
+                  <div className="flex items-center space-x-4 min-w-0">
+                    <div className="relative flex-shrink-0">
+                      <img 
+                        src={song.image} 
+                        alt={song.name}
+                        className="w-12 h-12 rounded-lg object-cover" 
+                        onError={(e) => {
+                          e.target.src = 'https://via.placeholder.com/48x48/1f1f1f/ffffff?text=♪';
+                        }}
+                      />
+                      <div className="absolute inset-0 bg-black/60 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <Play className="w-4 h-4 text-white fill-current" />
+                      </div>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-white font-semibold text-sm truncate group-hover:text-green-400 transition-colors">
+                        {song.name}
+                      </p>
+                      <p className="text-gray-400 text-xs truncate mt-0.5">
+                        Uploaded by <span className="text-blue-400 font-medium">{song.uploaderName}</span> ({song.uploaderEmail})
+                      </p>
                     </div>
                   </div>
-                  <div>
-                    <p className="text-white font-medium group-hover:text-green-400 transition-colors">
-                      {song.name}
+                  <div className="flex items-center space-x-4 flex-shrink-0">
+                    <span className="text-gray-500 text-xs hidden md:inline">{song.album}</span>
+                    <span className="text-gray-400 text-xs font-medium bg-white/[0.04] px-2.5 py-1 rounded-md border border-white/[0.03]">
+                      {song.duration || '0:00'}
+                    </span>
+                    {track && track._id === song._id && playStatus && (
+                      <div className="flex items-center text-green-400">
+                        <span className="w-2 h-2 rounded-full bg-green-500 animate-ping" />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )) : (
+                <div className="text-center text-gray-400 py-12">
+                  <Music className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                  <p className="text-sm font-semibold">No song uploads found</p>
+                  <p className="text-xs text-gray-500 mt-0.5">Community uploaded songs will be tracked here.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* User activity joins */}
+        <div className="bg-[#18181f] border border-white/[0.04] rounded-2xl p-6 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                  <Users className="w-5 h-5 text-green-400" />
+                  Recent User Registrations
+                </h3>
+                <p className="text-gray-400 text-xs mt-0.5">Latest community signups.</p>
+              </div>
+              <button 
+                onClick={() => navigate('/admin/users')}
+                className="text-green-500 hover:text-green-400 text-xs font-bold transition-colors flex items-center gap-0.5"
+              >
+                Manage Users
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+            
+            <div className="space-y-3">
+              {recentUserRegistrations.length > 0 ? recentUserRegistrations.map((userItem) => (
+                <div key={userItem._id} className="flex items-center space-x-3 p-3 bg-white/[0.01] hover:bg-white/[0.03] border border-white/[0.02] rounded-xl transition-all duration-200">
+                  <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-gray-800 to-gray-700 flex items-center justify-center font-bold text-green-400 text-sm flex-shrink-0">
+                    {userItem.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-white text-sm font-semibold truncate">{userItem.name}</p>
+                    <p className="text-gray-400 text-[11px] truncate">{userItem.email}</p>
+                    <p className="text-gray-500 text-[10px] flex items-center gap-1 mt-0.5">
+                      <Calendar className="w-3 h-3" />
+                      Joined {new Date(userItem.createdAt).toLocaleDateString()}
                     </p>
-                    <p className="text-gray-400 text-sm">{song.desc}</p>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <span className="text-xs font-bold text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-full border border-blue-500/20">
+                      {userItem.songCount} {userItem.songCount === 1 ? 'song' : 'songs'}
+                    </span>
                   </div>
                 </div>
-                <div className="flex items-center space-x-6">
-                  <span className="text-gray-400 text-sm">{song.album}</span>
-                  <span className="text-gray-400 text-sm">{song.duration || '0:00'}</span>
-                  {track && track._id === song._id && playStatus && (
-                    <div className="flex items-center text-green-400">
-                      <Activity className="w-4 h-4 animate-pulse" />
-                    </div>
-                  )}
+              )) : (
+                <div className="text-center text-gray-400 py-12">
+                  <Users className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                  <p className="text-sm font-semibold">No registered users</p>
                 </div>
-              </div>
-            )) : (
-              <div className="text-center text-gray-400 py-12">
-                <Music className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                <p>No songs uploaded yet</p>
-                <p className="text-sm mt-1">Start by adding your first song</p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Recent Activity */}
-        <div className="bg-gray-800 rounded-lg p-6">
-          <h3 className="text-xl font-semibold text-white mb-6">Recent Activity</h3>
-          
-          <div className="space-y-4">
-            {recentActivity.map((activity, index) => {
-              const Icon = activity.icon;
-              return (
-                <div key={index} className="flex items-start space-x-3">
-                  <div className="bg-gray-700 p-2 rounded-lg">
-                    <Icon className="w-4 h-4 text-gray-400" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-white text-sm">{activity.item}</p>
-                    <div className="flex items-center justify-between mt-1">
-                      <p className="text-gray-400 text-xs">{activity.time}</p>
-                      <span className="text-gray-500 text-xs">{activity.user}</span>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-
-      {/* Top Albums and Analytics */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        {/* Top Albums */}
-        <div className="bg-gray-800 rounded-lg p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-semibold text-white">Top Albums</h3>
-            <button 
-              onClick={() => navigate('/admin/list-albums')}
-              className="text-green-500 hover:text-green-400 text-sm font-medium transition-colors"
-            >
-              View all
-            </button>
-          </div>
-          
-          <div className="space-y-4">
-            {topAlbums.length > 0 ? topAlbums.map((album, index) => (
-              <div key={album._id} className="flex items-center space-x-4 p-3 hover:bg-gray-700 rounded-lg transition-colors">
-                <div className="flex-shrink-0">
-                  <img 
-                    src={album.image} 
-                    alt={album.name}
-                    className="w-12 h-12 rounded object-cover"
-                    onError={(e) => {
-                      e.target.src = 'https://via.placeholder.com/48x48/1f1f1f/ffffff?text=♪';
-                    }}
-                  />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-white font-medium truncate">{album.name}</p>
-                  <p className="text-gray-400 text-sm">
-                    {album.songCount} song{album.songCount !== 1 ? 's' : ''}
-                  </p>
-                </div>
-                <div className="flex items-center">
-                  <div 
-                    className="w-4 h-4 rounded-full"
-                    style={{ backgroundColor: album.bgColour }}
-                  />
-                </div>
-              </div>
-            )) : (
-              <div className="text-center text-gray-400 py-8">
-                <Album className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                <p>No albums created yet</p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Analytics Summary */}
-        <div className="bg-gray-800 rounded-lg p-6">
-          <h3 className="text-xl font-semibold text-white mb-6">Performance Overview</h3>
-          
-          <div className="space-y-6">
-            {/* Listening Stats */}
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-gray-400 text-sm">Total Listening Time</span>
-                <span className="text-white font-medium">{formatTotalDuration(totalDuration * 45)}</span>
-              </div>
-              <div className="w-full bg-gray-700 rounded-full h-2">
-                <div className="bg-green-500 h-2 rounded-full" style={{ width: '68%' }}></div>
-              </div>
-            </div>
-
-            {/* Popular Genres */}
-            <div>
-              <p className="text-gray-400 text-sm mb-3">Popular Content</p>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-white text-sm">Songs</span>
-                  <div className="flex items-center">
-                    <div className="w-20 bg-gray-700 rounded-full h-1.5 mr-3">
-                      <div className="bg-green-500 h-1.5 rounded-full" style={{ width: '85%' }}></div>
-                    </div>
-                    <span className="text-gray-400 text-xs">85%</span>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-white text-sm">Albums</span>
-                  <div className="flex items-center">
-                    <div className="w-20 bg-gray-700 rounded-full h-1.5 mr-3">
-                      <div className="bg-blue-500 h-1.5 rounded-full" style={{ width: '62%' }}></div>
-                    </div>
-                    <span className="text-gray-400 text-xs">62%</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Growth Metrics */}
-            <div className="bg-gray-700/50 rounded-lg p-4">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-gray-400 text-sm">Growth This Month</span>
-                <TrendingUp className="w-4 h-4 text-green-400" />
-              </div>
-              <div className="text-2xl font-bold text-white">+{analyticsData.plays.change}%</div>
-              <p className="text-green-400 text-sm">Above average performance</p>
+              )}
             </div>
           </div>
         </div>
       </div>
 
       {/* Quick Actions */}
-      <div className="bg-gray-800 rounded-lg p-6">
-        <h3 className="text-xl font-semibold text-white mb-6">Quick Actions</h3>
-        
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {quickActions.map((action, index) => {
-            const Icon = action.icon;
-            return (
-              <button
-                key={index}
-                onClick={action.action}
-                className={`${action.color} text-white p-4 rounded-lg transition-all duration-200 hover:scale-105 group`}
-              >
-                <Icon className="w-6 h-6 mb-3 mx-auto group-hover:scale-110 transition-transform" />
-                <p className="font-medium text-sm">{action.title}</p>
-                <p className="text-xs opacity-90 mt-1">{action.description}</p>
-              </button>
-            );
-          })}
-        </div>
-      </div>
+      <div className="bg-[#18181f] border border-white/[0.04] rounded-2xl p-6">
+        <h3 className="text-lg font-bold text-white mb-4">Quick Library Operations</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <button
+            onClick={() => navigate('/admin/add-song')}
+            className="flex items-center gap-4 p-4 bg-green-500 hover:bg-green-400 text-black rounded-xl font-bold transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-green-500/10"
+          >
+            <div className="p-2 bg-black/10 rounded-lg">
+              <Plus className="w-5 h-5" />
+            </div>
+            <div className="text-left">
+              <p className="text-sm font-bold">Add Song</p>
+              <p className="text-[11px] opacity-75 font-semibold">Upload track to the library</p>
+            </div>
+          </button>
+          
+          <button
+            onClick={() => navigate('/admin/add-album')}
+            className="flex items-center gap-4 p-4 bg-blue-500 hover:bg-blue-400 text-white rounded-xl font-bold transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-blue-500/10"
+          >
+            <div className="p-2 bg-black/10 rounded-lg">
+              <Album className="w-5 h-5" />
+            </div>
+            <div className="text-left">
+              <p className="text-sm font-bold">Create Album</p>
+              <p className="text-[11px] opacity-75 font-semibold">Create a new collection</p>
+            </div>
+          </button>
 
-      {/* System Status */}
-      <div className="bg-gray-800 rounded-lg p-6">
-        <h3 className="text-xl font-semibold text-white mb-6">System Status</h3>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="text-center">
-            <div className="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
-              <Activity className="w-6 h-6 text-green-500" />
+          <button
+            onClick={() => navigate('/admin/users')}
+            className="flex items-center gap-4 p-4 bg-yellow-500 hover:bg-yellow-400 text-black rounded-xl font-bold transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-yellow-500/10"
+          >
+            <div className="p-2 bg-black/10 rounded-lg">
+              <Users className="w-5 h-5" />
             </div>
-            <p className="text-white font-medium">Server Status</p>
-            <p className="text-green-400 text-sm">All systems operational</p>
-          </div>
-          
-          <div className="text-center">
-            <div className="w-12 h-12 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
-              <Upload className="w-6 h-6 text-blue-500" />
+            <div className="text-left">
+              <p className="text-sm font-bold">Manage Users</p>
+              <p className="text-[11px] opacity-75 font-semibold">Review accounts and status</p>
             </div>
-            <p className="text-white font-medium">Upload Status</p>
-            <p className="text-blue-400 text-sm">Ready for new content</p>
-          </div>
-          
-          <div className="text-center">
-            <div className="w-12 h-12 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
-              <Settings className="w-6 h-6 text-purple-500" />
-            </div>
-            <p className="text-white font-medium">Maintenance</p>
-            <p className="text-purple-400 text-sm">Next: Sunday 2AM</p>
-          </div>
+          </button>
         </div>
       </div>
     </div>

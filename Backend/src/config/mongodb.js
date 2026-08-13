@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import seedAdmin from "./seedAdmin.js";
 
 const connectDB = async () => {
   try {
@@ -28,6 +29,9 @@ const connectDB = async () => {
     await mongoose.connect(process.env.MONGODB_URI);
 
     console.log("🎉 MongoDB connection established successfully");
+    
+    // Seed admin credentials
+    await seedAdmin();
     
     // Test the connection by listing collections
     const collections = await mongoose.connection.db.listCollections().toArray();
