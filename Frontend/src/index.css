@@ -32,6 +32,8 @@ button:disabled { cursor: not-allowed; }
 
 html, body, #root {
   height: 100%;
+  background-color: #030305;
+  color: #ffffff;
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

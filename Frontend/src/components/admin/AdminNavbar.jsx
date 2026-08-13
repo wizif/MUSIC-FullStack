@@ -24,13 +24,13 @@ const AdminNavbar = () => {
   };
 
   return (
-    <div className="bg-gradient-to-r from-gray-900 to-black p-4 flex items-center justify-between border-b border-gray-800">
+    <div className="bg-[#0a0a0f]/40 backdrop-blur-md p-4 flex items-center justify-between border-b border-white/[0.05]">
       {/* Left - Navigation */}
       <div className="flex items-center space-x-4">
-        <button className="p-2 rounded-full bg-black hover:bg-gray-800 transition-colors hover:scale-110 transform">
+        <button className="p-2 rounded-full bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.03] transition-colors hover:scale-110 transform">
           <ChevronLeft className="h-5 w-5 text-white" />
         </button>
-        <button className="p-2 rounded-full bg-black hover:bg-gray-800 transition-colors hover:scale-110 transform">
+        <button className="p-2 rounded-full bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.03] transition-colors hover:scale-110 transform">
           <ChevronRight className="h-5 w-5 text-white" />
         </button>
       </div>
@@ -44,7 +44,7 @@ const AdminNavbar = () => {
             placeholder="Search songs, albums, artists..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-gray-800 border-0 rounded-full py-3 pl-10 pr-4 text-white placeholder-gray-400 focus:ring-2 focus:ring-green-500 focus:bg-gray-700 transition-all duration-200"
+            className="w-full bg-white/[0.04] border border-white/[0.05] rounded-full py-3 pl-10 pr-4 text-white placeholder-gray-400 focus:ring-2 focus:ring-green-500 focus:bg-white/[0.08] transition-all duration-200"
           />
         </form>
       </div>
@@ -53,7 +53,7 @@ const AdminNavbar = () => {
       <div className="flex items-center space-x-4">
         
         {/* Notifications */}
-        <button className="p-2 rounded-full bg-gray-800 hover:bg-gray-700 transition-colors relative hover:scale-110 transform">
+        <button className="p-2 rounded-full bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.03] transition-colors relative hover:scale-110 transform">
           <Bell className="h-5 w-5 text-white" />
           <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
             3
@@ -70,7 +70,7 @@ const AdminNavbar = () => {
               Administrator
             </span>
           </div>
-          <button className="p-2 rounded-full bg-gray-800 hover:bg-gray-700 transition-colors hover:scale-110 transform">
+          <button className="p-2 rounded-full bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.03] transition-colors hover:scale-110 transform">
             <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
               {getUserInitials()}
             </div>

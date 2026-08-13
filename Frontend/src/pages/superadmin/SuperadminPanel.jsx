@@ -3,6 +3,7 @@ import { Shield, Users, Mail, Calendar, UserCheck, UserX, AlertCircle, CheckCirc
 import axios from 'axios';
 import { API_BASE_URL } from '../../utils/constants.js';
 import LoadingSpinner from '../../components/shared/LoadingSpinner.jsx';
+import Scanner from '../../components/shared/Scanner.jsx';
 
 const SuperadminPanel = () => {
   const [users, setUsers] = useState([]);
@@ -77,10 +78,42 @@ const SuperadminPanel = () => {
   );
 
   return (
-    <div className="relative min-h-screen bg-[#08080C] text-white p-6 md:p-12 overflow-hidden font-sans select-none">
+    <div className="relative min-h-screen bg-[#08080C]/40 backdrop-blur-md text-white p-6 md:p-12 overflow-hidden font-sans select-none">
+      {/* Background Scanner Visual */}
+      <div className="absolute inset-0 pointer-events-none opacity-30 z-0">
+        <Scanner
+          color1="#A855F7"
+          color2="#3B82F6"
+          color3="#FFFFFF"
+          speed={0.5}
+          sweepSpeed={0.25}
+          sweepWidth={1.6}
+          sweepFalloff={6}
+          scale={1.5}
+          frequency={2}
+          ripple={0.22}
+          bandDensity={11}
+          lineSharpness={5.5}
+          glow={0.22}
+          scanDirection="vertical"
+          colorSpread={0.7}
+          brightness={1.0}
+          contrast={1.15}
+          softness={1.4}
+          vignette={0.45}
+          scanline={true}
+          grain={true}
+          grainIntensity={0.05}
+          opacity={1.0}
+          mouseInteraction={true}
+          mouseRadius={0.5}
+          mouseStrength={0.5}
+        />
+      </div>
+
       {/* Background ambient lighting */}
-      <div className="absolute top-[-10%] right-[-10%] w-[600px] h-[600px] rounded-full bg-gradient-to-tr from-purple-500/10 to-indigo-500/0 blur-[130px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-gradient-to-br from-green-500/10 to-emerald-500/0 blur-[120px] pointer-events-none" />
+      <div className="absolute top-[-10%] right-[-10%] w-[600px] h-[600px] rounded-full bg-gradient-to-tr from-purple-500/10 to-indigo-500/0 blur-[130px] pointer-events-none z-0" />
+      <div className="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-gradient-to-br from-green-500/10 to-emerald-500/0 blur-[120px] pointer-events-none z-0" />
 
       <div className="relative z-10 max-w-6xl mx-auto space-y-8">
         {/* Panel Header */}

@@ -45,7 +45,6 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     console.log('🔐 Real login attempt started...');
-    setIsLoading(true);
     setError(null);
     try {
       const response = await api.post('/api/auth/login', { email, password });
@@ -64,14 +63,11 @@ export const AuthProvider = ({ children }) => {
       console.error('❌ Login failed:', errMsg);
       setError(errMsg);
       return { success: false, error: errMsg };
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const register = async (name, email, password) => {
     console.log('📝 Registration attempt started...');
-    setIsLoading(true);
     setError(null);
     try {
       const response = await api.post('/api/auth/register', { name, email, password });
@@ -90,8 +86,6 @@ export const AuthProvider = ({ children }) => {
       console.error('❌ Registration failed:', errMsg);
       setError(errMsg);
       return { success: false, error: errMsg };
-    } finally {
-      setIsLoading(false);
     }
   };
 

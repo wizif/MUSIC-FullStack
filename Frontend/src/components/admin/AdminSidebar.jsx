@@ -24,9 +24,9 @@ const AdminSidebar = () => {
   };
 
   return (
-    <div className="w-64 bg-black border-r border-gray-800 flex flex-col">
+    <div className="w-64 bg-black/30 backdrop-blur-md border-r border-white/[0.05] flex flex-col">
       {/* Logo/Header */}
-      <div className="p-6 border-b border-gray-800">
+      <div className="p-6 border-b border-white/[0.05]">
         <h1 className="text-2xl font-bold text-white flex items-center">
           <Music className="mr-3 text-green-500" />
           MusicOn Admin
@@ -62,7 +62,7 @@ const AdminSidebar = () => {
       </nav>
 
       {/* Footer */}
-      <div className="p-4 border-t border-gray-800">
+      <div className="p-4 border-t border-white/[0.05]">
         <div className="text-xs text-gray-500 text-center">
           <p>MusicOn Admin Panel v1.0</p>
           <p className="mt-1">© 2024 All rights reserved</p>
