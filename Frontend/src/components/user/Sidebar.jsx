@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Home, Search, Library, Plus, Heart, Download, 
   ChevronRight, ChevronDown, Play, Music, Clock,
-  List, Grid, MoreHorizontal
+  List, Grid, MoreHorizontal, Trash2, X
 } from 'lucide-react';
 import { usePlayer } from '../../context/PlayerContext.jsx';
 
@@ -17,24 +17,63 @@ const Sidebar = () => {
     track, 
     playStatus, 
     playlists, 
-    createPlaylist 
+    createPlaylist,
+    deletePlaylist
   } = usePlayer();
   const [imageErrors, setImageErrors] = useState(new Set());
   const [expandedItems, setExpandedItems] = useState(new Set());
   const [viewMode, setViewMode] = useState('list'); // 'list' or 'grid'
   const [selectedCategory, setSelectedCategory] = useState('all'); // 'all', 'playlists', 'artists', 'albums'
   
+  // Custom Playlist Creator Modal state
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [newPlaylistName, setNewPlaylistName] = useState('');
+  const [isPrivatePlaylist, setIsPrivatePlaylist] = useState(true);
+  const [playlistError, setPlaylistError] = useState('');
+  const [creatingPlaylistState, setCreatingPlaylistState] = useState(false);
+
   // Find Liked Songs playlist
   const likedSongsPlaylist = playlists.find(p => p.name === 'Liked Songs');
   const likedSongs = likedSongsPlaylist ? likedSongsPlaylist.songs : [];
 
-  const handleCreatePlaylist = async () => {
-    const name = prompt("Enter a name for your new playlist:");
-    if (!name || !name.trim()) return;
+  const handleCreatePlaylist = () => {
+    setIsCreateModalOpen(true);
+    setPlaylistError('');
+  };
+
+  const handleCreateSubmit = async (e) => {
+    e.preventDefault();
+    if (!newPlaylistName.trim()) {
+      setPlaylistError('Playlist name is required');
+      return;
+    }
+    setCreatingPlaylistState(true);
+    setPlaylistError('');
     try {
-      await createPlaylist(name.trim());
+      await createPlaylist(newPlaylistName.trim(), isPrivatePlaylist);
+      setIsCreateModalOpen(false);
+      setNewPlaylistName('');
+      setIsPrivatePlaylist(true);
     } catch (err) {
-      alert(err.message || "Failed to create playlist. Make sure you are logged in.");
+      setPlaylistError(err.message || 'Failed to create playlist. Make sure you are logged in.');
+    } finally {
+      setCreatingPlaylistState(false);
+    }
+  };
+
+  const handleDeletePlaylist = async (playlistId, e) => {
+    e.stopPropagation();
+    if (!window.confirm("Are you sure you want to delete this playlist?")) return;
+    try {
+      await deletePlaylist(playlistId);
+      // Clean up expanded state if it was expanded
+      setExpandedItems(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(playlistId);
+        return newSet;
+      });
+    } catch (err) {
+      alert(err.message || "Failed to delete playlist");
     }
   };
 
@@ -294,74 +333,159 @@ const Sidebar = () => {
         </div>
         
         {/* Library Content - Scrollable */}
-        <div className="flex-1 overflow-y-auto px-6 pb-6 space-y-1 min-h-0">
-          {getFilteredContent().map((item) => (
-            <div key={item._id} className="space-y-1">
-              <div 
-                className="flex items-center gap-3 p-2 rounded-md hover:bg-[#1a1a1a] cursor-pointer transition-colors group"
-                onClick={() => {
-                  if (item.type === 'album') {
-                    navigate(`/album/${item._id}`);
-                  } else {
-                    toggleExpanded(item._id);
-                  }
-                }}
-              >
-                {/* Image or Icon */}
-                <div className="w-12 h-12 flex-shrink-0 relative">
-                  {item.isLikedSongs ? (
-                    <div className="w-12 h-12 bg-gradient-to-br from-purple-700 to-blue-300 rounded flex items-center justify-center">
-                      <Heart className="w-6 h-6 text-white fill-white" />
+        <div className="flex-1 overflow-y-auto px-6 pb-6 min-h-0">
+          <div className={viewMode === 'list' ? 'space-y-1' : 'grid grid-cols-2 gap-3'}>
+            {getFilteredContent().map((item) => {
+              const isExpanded = expandedItems.has(item._id);
+              return (
+                <div 
+                  key={item._id} 
+                  className={`space-y-1 transition-all duration-300 ${
+                    viewMode === 'grid' 
+                      ? (isExpanded ? 'col-span-2' : 'col-span-1') 
+                      : ''
+                  }`}
+                >
+                  {viewMode === 'list' ? (
+                    // List View Item
+                    <div 
+                      className="flex items-center gap-3 p-2 rounded-md hover:bg-[#1a1a1a] cursor-pointer transition-colors group"
+                      onClick={() => {
+                        if (item.type === 'album') {
+                          navigate(`/album/${item._id}`);
+                        } else {
+                          toggleExpanded(item._id);
+                        }
+                      }}
+                    >
+                      {/* Image or Icon */}
+                      <div className="w-12 h-12 flex-shrink-0 relative">
+                        {item.isLikedSongs ? (
+                          <div className="w-12 h-12 bg-gradient-to-br from-purple-700 to-blue-300 rounded flex items-center justify-center">
+                            <Heart className="w-6 h-6 text-white fill-white" />
+                          </div>
+                        ) : item.image ? (
+                          <img 
+                            src={item.image}
+                            alt={item.name}
+                            className="w-12 h-12 rounded object-cover"
+                            onError={(e) => handleImageError(e, item._id)}
+                          />
+                        ) : (
+                          <div className="w-12 h-12 bg-[#282828] rounded flex items-center justify-center">
+                            <Music className="w-6 h-6 text-gray-400" />
+                          </div>
+                        )}
+                        
+                        {item.type === 'album' && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-60 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Play className="w-5 h-5 text-white fill-current" />
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Content Info */}
+                      <div className="min-w-0 flex-1">
+                        <p className="text-white text-[15px] font-medium truncate">{item.name}</p>
+                        <p className="text-gray-400 text-[13px] truncate">{item.subtitle}</p>
+                      </div>
+                      
+                      {/* Delete Playlist button */}
+                      {item.type === 'playlist' && !item.isLikedSongs && (
+                        <button
+                          onClick={(e) => handleDeletePlaylist(item._id, e)}
+                          className="text-gray-500 hover:text-rose-500 transition-colors p-1.5 opacity-0 group-hover:opacity-100 hover:bg-[#282828] rounded transition-all duration-200"
+                          title="Delete playlist"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+
+                      {item.type !== 'album' && getSongsForItem(item).length > 0 && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleExpanded(item._id);
+                          }}
+                          className="text-gray-400 hover:text-white transition-colors p-1"
+                        >
+                          {isExpanded ? (
+                            <ChevronDown className="w-4 h-4" />
+                          ) : (
+                            <ChevronRight className="w-4 h-4" />
+                          )}
+                        </button>
+                      )}
                     </div>
-                  ) : item.image ? (
-                    <img 
-                      src={item.image}
-                      alt={item.name}
-                      className="w-12 h-12 rounded object-cover"
-                      onError={(e) => handleImageError(e, item._id)}
-                    />
                   ) : (
-                    <div className="w-12 h-12 bg-[#282828] rounded flex items-center justify-center">
-                      <Music className="w-6 h-6 text-gray-400" />
+                    // Grid View Item (Card View)
+                    <div 
+                      className={`flex flex-col items-center text-center p-3 rounded-xl cursor-pointer transition-all duration-300 group border ${
+                        isExpanded 
+                          ? 'bg-white/[0.08] border-white/[0.12] shadow-xl' 
+                          : 'bg-white/[0.02] hover:bg-white/[0.06] border-white/[0.04] hover:border-white/[0.08]'
+                      }`}
+                      onClick={() => {
+                        if (item.type === 'album') {
+                          navigate(`/album/${item._id}`);
+                        } else {
+                          toggleExpanded(item._id);
+                        }
+                      }}
+                    >
+                      {/* Card Image */}
+                      <div className="w-full aspect-square relative rounded-lg overflow-hidden mb-3">
+                        {item.isLikedSongs ? (
+                          <div className="w-full h-full bg-gradient-to-br from-purple-700 to-blue-300 flex items-center justify-center">
+                            <Heart className="w-10 h-10 text-white fill-white" />
+                          </div>
+                        ) : item.image ? (
+                          <img 
+                            src={item.image}
+                            alt={item.name}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            onError={(e) => handleImageError(e, item._id)}
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-[#282828] flex items-center justify-center">
+                            <Music className="w-10 h-10 text-gray-400" />
+                          </div>
+                        )}
+                        
+                        {/* Trash Button for Custom Playlists in Grid */}
+                        {item.type === 'playlist' && !item.isLikedSongs && (
+                          <button
+                            onClick={(e) => handleDeletePlaylist(item._id, e)}
+                            className="absolute top-2 left-2 p-1.5 bg-black/60 hover:bg-rose-600 text-gray-400 hover:text-white rounded-lg transition-all duration-200 opacity-0 group-hover:opacity-100 shadow-md backdrop-blur-sm z-20"
+                            title="Delete playlist"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+
+                        {item.type === 'album' && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div className="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center shadow-lg hover:scale-105 transition-transform">
+                              <Play className="w-4 h-4 text-black fill-current ml-0.5" />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Card Info */}
+                      <div className="w-full min-w-0">
+                        <p className="text-white text-sm font-semibold truncate">{item.name}</p>
+                        <p className="text-gray-400 text-xs truncate mt-0.5">{item.subtitle.split(' • ')[0]}</p>
+                      </div>
                     </div>
                   )}
                   
-                  {/* Play button overlay for albums */}
-                  {item.type === 'album' && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-60 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Play className="w-5 h-5 text-white fill-current" />
-                    </div>
-                  )}
+                  {/* Expanded Content */}
+                  {isExpanded && renderExpandedContent(item)}
                 </div>
-                
-                {/* Content Info */}
-                <div className="min-w-0 flex-1">
-                  <p className="text-white text-[15px] font-medium truncate">{item.name}</p>
-                  <p className="text-gray-400 text-[13px] truncate">{item.subtitle}</p>
-                </div>
-                
-                {/* Expand/Collapse Arrow for expandable items */}
-                {item.type !== 'album' && getSongsForItem(item).length > 0 && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleExpanded(item._id);
-                    }}
-                    className="text-gray-400 hover:text-white transition-colors p-1"
-                  >
-                    {expandedItems.has(item._id) ? (
-                      <ChevronDown className="w-4 h-4" />
-                    ) : (
-                      <ChevronRight className="w-4 h-4" />
-                    )}
-                  </button>
-                )}
-              </div>
-              
-              {/* Expanded Content */}
-              {expandedItems.has(item._id) && renderExpandedContent(item)}
-            </div>
-          ))}
+              );
+            })}
+          </div>
           
           {/* Empty State */}
           {getFilteredContent().length === 0 && (
@@ -374,6 +498,69 @@ const Sidebar = () => {
             </div>
           )}
         </div>
+
+        {/* Custom Create Playlist Modal Overlay */}
+        {isCreateModalOpen && (
+          <div className="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-[#18181f] border border-white/[0.08] p-6 rounded-2xl w-full max-w-sm shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-200">
+              <div className="flex justify-between items-center pb-2 border-b border-white/[0.06]">
+                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                  <Plus className="w-5 h-5 text-green-500" />
+                  Create Playlist
+                </h3>
+                <button 
+                  onClick={() => setIsCreateModalOpen(false)}
+                  className="text-gray-400 hover:text-white transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {playlistError && (
+                <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs font-semibold">
+                  {playlistError}
+                </div>
+              )}
+
+              <form onSubmit={handleCreateSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-gray-400 uppercase tracking-wider pl-1">
+                    Playlist Name *
+                  </label>
+                  <input
+                    type="text"
+                    value={newPlaylistName}
+                    onChange={(e) => setNewPlaylistName(e.target.value)}
+                    placeholder="My Awesome Playlist"
+                    className="w-full p-3 bg-black/40 border border-white/[0.08] hover:border-white/[0.18] focus:border-green-500/60 focus:outline-none focus:ring-2 focus:ring-green-500/10 rounded-xl text-white placeholder-gray-500 text-sm transition-all duration-300"
+                    disabled={creatingPlaylistState}
+                    required
+                    autoFocus
+                  />
+                </div>
+
+
+                <div className="flex gap-3 justify-end pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsCreateModalOpen(false)}
+                    className="px-4 py-2.5 text-xs font-bold text-gray-400 hover:text-white bg-transparent rounded-xl transition-all duration-200"
+                    disabled={creatingPlaylistState}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-5 py-2.5 text-xs font-bold bg-green-500 hover:bg-green-400 text-black rounded-xl transition-all duration-200 hover:scale-[1.03] active:scale-[0.97] flex items-center justify-center min-w-[80px]"
+                    disabled={creatingPlaylistState}
+                  >
+                    {creatingPlaylistState ? 'Creating...' : 'Create'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
