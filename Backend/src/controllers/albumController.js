@@ -75,9 +75,34 @@ const getAlbumSongs = async (req, res) => {
   }
 };
 
+const getPublicIdFromUrl = (url) => {
+  if (!url) return null;
+  const parts = url.split('/');
+  const lastPart = parts[parts.length - 1];
+  const publicIdWithExtension = lastPart.split('.')[0];
+  return publicIdWithExtension;
+};
+
 const removeAlbum = async (req, res) => {
   try {
-    await albumModel.findByIdAndDelete(req.body.id);
+    const albumId = req.body.id;
+    const album = await albumModel.findById(albumId);
+
+    if (!album) {
+      return res.status(404).json({
+        success: false,
+        message: "Album not found",
+      });
+    }
+
+    // Delete image from Cloudinary
+    const imagePublicId = getPublicIdFromUrl(album.image);
+    if (imagePublicId) {
+      console.log("🗑️ Deleting album cover image from Cloudinary, public ID:", imagePublicId);
+      await cloudinary.uploader.destroy(imagePublicId, { resource_type: "image" });
+    }
+
+    await albumModel.findByIdAndDelete(albumId);
     res.json({ success: true, message: "Album removed successfully" });
   } catch (error) {
     console.error("Error removing album:", error);

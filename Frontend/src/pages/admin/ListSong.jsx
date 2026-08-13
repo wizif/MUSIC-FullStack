@@ -5,7 +5,7 @@ import { songAPI } from '../../utils/api.js';
 import LoadingSpinner from '../../components/shared/LoadingSpinner.jsx';
 
 const ListSong = () => {
-  const { songsData, songsLoading, playWithId, playStatus, track, loadSongs } = usePlayer();
+  const { songsData, songsLoading, playTrack, playStatus, track, loadSongs, pause, play } = usePlayer();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedAlbum, setSelectedAlbum] = useState('');
   const [loading, setLoading] = useState(false);
@@ -46,12 +46,16 @@ const ListSong = () => {
     }
   };
 
-  const handlePlay = (songId) => {
-    if (track && track._id === songId && playStatus) {
-      // If same song is playing, we would pause (but we don't have pause in playWithId)
-      return;
+  const handlePlay = (song) => {
+    if (track && track._id === song._id) {
+      if (playStatus) {
+        pause();
+      } else {
+        play();
+      }
+    } else {
+      playTrack(song, songsData);
     }
-    playWithId(songId);
   };
 
   const isCurrentSong = (songId) => {
@@ -145,7 +149,7 @@ const ListSong = () => {
                 {/* Play Button */}
                 <div className="flex items-center">
                   <button
-                    onClick={() => handlePlay(song._id)}
+                    onClick={() => handlePlay(song)}
                     className="w-10 h-10 rounded-full bg-green-500 hover:bg-green-400 flex items-center justify-center transition-all hover:scale-105"
                     disabled={loading}
                   >

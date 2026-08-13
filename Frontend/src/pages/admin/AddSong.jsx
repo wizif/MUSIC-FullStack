@@ -67,7 +67,6 @@ const AddSong = () => {
       // Validation
       if (!formData.name.trim()) throw new Error('Song name is required');
       if (!formData.desc.trim()) throw new Error('Song description is required');
-      if (!formData.album.trim()) throw new Error('Album selection is required');
       if (!audioFile) throw new Error('Audio file is required');
       if (!imageFile) throw new Error('Image file is required');
 
@@ -190,7 +189,7 @@ const AddSong = () => {
                 className="w-full p-3 bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 disabled={loading}
               >
-                <option value="">Select an album</option>
+                <option value="">None (Single)</option>
                 {albumsData.map((album) => (
                   <option key={album._id} value={album.name}>
                     {album.name}

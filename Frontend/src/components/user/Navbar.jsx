@@ -98,10 +98,10 @@ const Navbar = () => {
     e.preventDefault();
     if (searchTerm.trim()) {
       if (searchResults.songs.length > 0) {
-        playWithId(searchResults.songs[0]._id);
+        playTrack(searchResults.songs[0], searchResults.songs);
         clearSearch();
       } else if (searchResults.external && searchResults.external.length > 0) {
-        playTrack(searchResults.external[0]);
+        playTrack(searchResults.external[0], searchResults.external);
         clearSearch();
       }
     }
@@ -116,9 +116,9 @@ const Navbar = () => {
 
   const handleSongClick = (song) => {
     if (song.external) {
-      playTrack(song);
+      playTrack(song, searchResults.external);
     } else {
-      playWithId(song._id);
+      playTrack(song, searchResults.songs);
     }
     clearSearch();
   };

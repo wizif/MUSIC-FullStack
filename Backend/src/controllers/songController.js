@@ -111,6 +111,14 @@ const getMySongs = async (req, res) => {
   }
 };
 
+const getPublicIdFromUrl = (url) => {
+  if (!url) return null;
+  const parts = url.split('/');
+  const lastPart = parts[parts.length - 1];
+  const publicIdWithExtension = lastPart.split('.')[0];
+  return publicIdWithExtension;
+};
+
 // @desc    Remove a song
 // @route   POST /api/song/remove
 // @access  Private
@@ -136,6 +144,19 @@ const removeSong = async (req, res) => {
         success: false,
         message: "You can only remove your own tracks.",
       });
+    }
+
+    // Delete assets from Cloudinary to prevent storage leaks
+    const audioPublicId = getPublicIdFromUrl(song.file);
+    const imagePublicId = getPublicIdFromUrl(song.image);
+
+    if (audioPublicId) {
+      console.log("🗑️ Deleting audio from Cloudinary, public ID:", audioPublicId);
+      await cloudinary.uploader.destroy(audioPublicId, { resource_type: "video" });
+    }
+    if (imagePublicId) {
+      console.log("🗑️ Deleting image from Cloudinary, public ID:", imagePublicId);
+      await cloudinary.uploader.destroy(imagePublicId, { resource_type: "image" });
     }
 
     await songModel.findByIdAndDelete(songId);

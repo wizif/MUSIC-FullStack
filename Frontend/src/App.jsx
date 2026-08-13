@@ -264,7 +264,6 @@ const AppRouter = () => {
         </ProtectedAdminRoute>
       } />
 
-      {/* Catch all route - redirect based on authentication */}
       <Route path="*" element={
         isAuthenticated ? (
           isAdmin ? 
@@ -273,6 +272,7 @@ const AppRouter = () => {
         ) : (
           <Navigate to="/login" replace />
         )
+      } />
     </Routes>
     </>
   );

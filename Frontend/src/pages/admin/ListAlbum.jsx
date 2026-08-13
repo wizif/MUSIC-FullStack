@@ -5,7 +5,7 @@ import { albumAPI } from '../../utils/api.js';
 import LoadingSpinner from '../../components/shared/LoadingSpinner.jsx';
 
 const ListAlbum = () => {
-  const { albumsData, songsData, albumsLoading, loadAlbums } = usePlayer();
+  const { albumsData, songsData, albumsLoading, loadAlbums, playTrack } = usePlayer();
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -19,6 +19,13 @@ const ListAlbum = () => {
   // Get song count for each album
   const getAlbumSongCount = (albumName) => {
     return songsData.filter(song => song.album === albumName).length;
+  };
+
+  const handlePlayAlbum = (albumName) => {
+    const albumSongs = songsData.filter(song => song.album === albumName);
+    if (albumSongs.length > 0) {
+      playTrack(albumSongs[0], albumSongs);
+    }
   };
 
   const handleDelete = async (albumId, albumName) => {
@@ -114,6 +121,7 @@ const ListAlbum = () => {
                   {/* Overlay Actions */}
                   <div className="absolute inset-0 bg-black/50 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center space-x-2">
                     <button
+                      onClick={() => handlePlayAlbum(album.name)}
                       className="p-2 bg-green-500 rounded-full hover:bg-green-400 transition-colors"
                       title="Play album"
                       disabled={songCount === 0}

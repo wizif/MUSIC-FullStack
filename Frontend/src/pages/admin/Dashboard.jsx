@@ -24,7 +24,7 @@ const Dashboard = () => {
     albumsData, 
     songsLoading, 
     albumsLoading, 
-    playWithId,
+    playTrack,
     track,
     playStatus 
   } = usePlayer();
@@ -181,7 +181,7 @@ const Dashboard = () => {
                 <div 
                   key={song._id} 
                   className="flex items-center justify-between p-3 bg-white/[0.01] hover:bg-white/[0.04] border border-white/[0.02] rounded-xl transition-all duration-200 group cursor-pointer"
-                  onClick={() => playWithId(song._id)}
+                  onClick={() => playTrack(song, recentUserUploads)}
                 >
                   <div className="flex items-center space-x-4 min-w-0">
                     <div className="relative flex-shrink-0">
