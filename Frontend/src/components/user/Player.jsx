@@ -22,7 +22,7 @@ const Player = () => {
   const {
     track, seekBar, seekBg, volumeBar, volumeBg, playStatus,
     play, pause, time, previous, next, seekSong, setVolumeLevel, volume,
-    shuffle, repeat, toggleShuffle, toggleRepeat
+    shuffle, repeat, toggleShuffle, toggleRepeat, audioRef, setVolume
   } = usePlayer();
 
   const [isLiked, setIsLiked] = useState(false);
@@ -40,11 +40,17 @@ const Player = () => {
 
   const toggleMute = () => {
     if (isMuted) {
-      setVolumeLevel({ target: { offsetX: (prevVolume / 100) * volumeBg.current?.offsetWidth } });
+      setVolume(prevVolume);
+      if (audioRef.current) {
+        audioRef.current.volume = prevVolume / 100;
+      }
       setIsMuted(false);
     } else {
       setPrevVolume(volume);
-      setVolumeLevel({ target: { offsetX: 0 } });
+      setVolume(0);
+      if (audioRef.current) {
+        audioRef.current.volume = 0;
+      }
       setIsMuted(true);
     }
   };

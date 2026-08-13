@@ -10,11 +10,6 @@ const UserLayout = ({ children }) => {
 
   return (
     <div className="h-screen w-full bg-black text-white flex flex-col overflow-hidden relative">
-      {/* Hidden Audio Element */}
-      {track && (
-        <audio ref={audioRef} src={track.file || track.previewUrl} preload="auto"></audio>
-      )}
-
       {/* Background Scanner Visual */}
       <div className="absolute inset-0 pointer-events-none opacity-40 z-0">
         <Scanner

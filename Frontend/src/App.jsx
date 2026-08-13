@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext.jsx';
-import { PlayerProvider } from './context/PlayerContext.jsx';
+import { PlayerProvider, usePlayer } from './context/PlayerContext.jsx';
 import api from './utils/api.js';
 
 // Import layouts
@@ -159,6 +159,7 @@ const AuthLoadingFallback = () => (
 // Main App Router Component
 const AppRouter = () => {
   const { isAuthenticated, userRole, isLoading, user, isAdmin } = useAuth();
+  const { audioRef } = usePlayer();
 
   // Show loading spinner while checking authentication
   if (isLoading) {
@@ -166,7 +167,9 @@ const AppRouter = () => {
   }
 
   return (
-    <Routes>
+    <>
+      <audio ref={audioRef} preload="auto" />
+      <Routes>
       {/* Public Route - Login */}
       <Route 
         path="/login" 
@@ -270,8 +273,8 @@ const AppRouter = () => {
         ) : (
           <Navigate to="/login" replace />
         )
-      } />
     </Routes>
+    </>
   );
 };
 

@@ -10,7 +10,7 @@ const DisplayAlbum = () => {
   const { 
     albumsData, 
     songsData, 
-    playWithId, 
+    playTrack, 
     track, 
     playStatus, 
     albumsLoading,
@@ -39,7 +39,7 @@ const DisplayAlbum = () => {
 
   const playAlbum = () => {
     if (albumSongs.length > 0) {
-      playWithId(albumSongs[0]._id);
+      playTrack(albumSongs[0], albumSongs);
     }
   };
 
@@ -141,7 +141,7 @@ const DisplayAlbum = () => {
           albumSongs.map((song, index) => (
             <div
               key={song._id}
-              onClick={() => playWithId(song._id)}
+              onClick={() => playTrack(song, albumSongs)}
               className={`grid grid-cols-12 gap-4 px-4 py-3 rounded-lg hover:bg-[#ffffff1a] cursor-pointer transition-all duration-200 group ${
                 track?._id === song._id ? 'bg-[#ffffff1a]' : ''
               }`}

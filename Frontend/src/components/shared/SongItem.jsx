@@ -3,11 +3,11 @@ import { Play } from 'lucide-react';
 import { usePlayer } from '../../context/PlayerContext.jsx';
 
 const SongItem = ({ song, className = '', showPlayButton = true }) => {
-  const { playWithId } = usePlayer();
+  const { playTrack } = usePlayer();
 
   const handlePlay = () => {
     if (song && song._id) {
-      playWithId(song._id);
+      playTrack(song);
     }
   };
 

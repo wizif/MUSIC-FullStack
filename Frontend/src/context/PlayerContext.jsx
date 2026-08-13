@@ -283,28 +283,39 @@ export const PlayerProvider = ({ children }) => {
         }
       }
       
+      // If not found, check current playlist
+      if (!foundSong) {
+        foundSong = currentPlaylist.find(item => item._id === id);
+      }
+
+      // If not found, check playlists
+      if (!foundSong) {
+        for (const p of playlists) {
+          foundSong = p.songs?.find(item => item._id === id);
+          if (foundSong) break;
+        }
+      }
+
       if (!foundSong) {
         throw new Error('Song not found');
       }
 
-      console.log('🎵 Loading song:', foundSong.name);
-      setTrack(foundSong);
-      
-      if (audioRef.current) {
-        audioRef.current.src = foundSong.file;
-        await audioRef.current.play();
-        setPlayStatus(true);
-      }
+      await playTrack(foundSong);
     } catch (error) {
-      console.error('❌ Error playing song:', error);
+      console.error('❌ Error playing song by ID:', error);
       setError('Failed to play song');
     }
   };
 
-  const playTrack = async (song) => {
+  const playTrack = async (song, newPlaylist = null) => {
     try {
       console.log('🎵 Loading track:', song.name);
       
+      if (newPlaylist) {
+        setCurrentPlaylist(newPlaylist);
+        console.log('🎵 Active playlist set with size:', newPlaylist.length);
+      }
+
       let playableUrl = song.file || song.previewUrl;
       if (song.external && song.transcodingUrl) {
         // Resolve the temporary MP3 stream URL from our Backend API
@@ -339,17 +350,22 @@ export const PlayerProvider = ({ children }) => {
   };
 
   const previous = async () => {
-    if (!track || currentPlaylist.length === 0) {
-      // Use all songs if no specific playlist
-      const playlist = currentPlaylist.length > 0 ? currentPlaylist : songsData;
-      if (playlist.length === 0) return;
-      
-      const currentIndex = playlist.findIndex(item => item._id === track._id);
-      if (currentIndex > 0) {
-        await playWithId(playlist[currentIndex - 1]._id);
-      } else if (repeat) {
-        await playWithId(playlist[playlist.length - 1]._id);
-      }
+    if (!track) return;
+    
+    const playlist = currentPlaylist.length > 0 ? currentPlaylist : songsData;
+    if (playlist.length === 0) return;
+    
+    if (shuffle) {
+      const randomIndex = Math.floor(Math.random() * playlist.length);
+      await playTrack(playlist[randomIndex]);
+      return;
+    }
+    
+    const currentIndex = playlist.findIndex(item => item._id === track._id);
+    if (currentIndex > 0) {
+      await playTrack(playlist[currentIndex - 1]);
+    } else if (repeat) {
+      await playTrack(playlist[playlist.length - 1]);
     }
   };
 
@@ -359,11 +375,17 @@ export const PlayerProvider = ({ children }) => {
     const playlist = currentPlaylist.length > 0 ? currentPlaylist : songsData;
     if (playlist.length === 0) return;
     
+    if (shuffle) {
+      const randomIndex = Math.floor(Math.random() * playlist.length);
+      await playTrack(playlist[randomIndex]);
+      return;
+    }
+    
     const currentIndex = playlist.findIndex(item => item._id === track._id);
     if (currentIndex < playlist.length - 1) {
-      await playWithId(playlist[currentIndex + 1]._id);
+      await playTrack(playlist[currentIndex + 1]);
     } else if (repeat) {
-      await playWithId(playlist[0]._id);
+      await playTrack(playlist[0]);
     }
   };
 

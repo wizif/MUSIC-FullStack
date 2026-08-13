@@ -182,7 +182,7 @@ const SongRow = ({ song, index, isPlaying, onPlay, isLiked, onLikeToggle, playli
   return (
     <div className="w-full flex items-center gap-4 px-3 py-2.5 rounded-xl hover:bg-white/[0.06] transition-colors group text-left relative">
       <button
-        onClick={() => onPlay(song._id)}
+        onClick={() => onPlay(song)}
         className="flex-1 flex items-center gap-4 text-left min-w-0"
       >
         <span className={`w-5 text-center text-xs flex-shrink-0 font-medium ${isPlaying ? 'text-green-400' : 'text-gray-500 group-hover:hidden'}`}>
@@ -364,7 +364,7 @@ const DisplayHome = () => {
                       if (playStatus) pause();
                       else play();
                     } else {
-                      playTrack(s);
+                      playTrack(s, recentlyPlayed);
                     }
                   }}
                 />
@@ -431,7 +431,7 @@ const DisplayHome = () => {
                         play();
                       }
                     } else {
-                      playTrack(item);
+                      playTrack(item, discoveryTracks);
                     }
                   }}
                   isLiked={likedSongIds.has(item._id)}
@@ -489,7 +489,7 @@ const DisplayHome = () => {
                   song={song}
                   index={i}
                   isPlaying={track?._id === song._id && playStatus}
-                  onPlay={playWithId}
+                  onPlay={(s) => playTrack(s, songsData)}
                   isLiked={likedSongIds.has(song._id)}
                   onLikeToggle={toggleLikeTrack}
                   playlists={playlists}
