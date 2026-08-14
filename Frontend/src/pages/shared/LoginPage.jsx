@@ -89,19 +89,14 @@ const LoginPage = () => {
     }
   };
 
-  const handleQuickLogin = async (email, password) => {
-    setLoading(true);
+  const handleQuickFill = (email) => {
+    setIsLoginMode(true);
     setError('');
-    try {
-      const result = await login(email, password);
-      if (!result.success) {
-        throw new Error(result.error || 'Quick login failed');
-      }
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
+    setFormData(prev => ({ ...prev, email, password: '' }));
+    // Give React a tick to render, then focus the password field
+    setTimeout(() => {
+      document.getElementById('password-input')?.focus();
+    }, 50);
   };
 
   return (
@@ -264,6 +259,7 @@ const LoginPage = () => {
                     focusedField === 'password' ? 'text-[#1ED760]' : 'text-gray-500'
                   }`} />
                   <input
+                    id="password-input"
                     type={showPassword ? 'text' : 'password'}
                     name="password"
                     value={formData.password}
@@ -313,12 +309,12 @@ const LoginPage = () => {
                   <span>Dev — Quick Login</span>
                 </div>
                 <p className="text-[10px] text-gray-500 mb-3 leading-relaxed">
-                  These buttons only appear in development mode. Accounts must already exist in your MongoDB with passwords ≥ 8 characters.
+                  Click a role to auto-fill the email, then enter the password to sign in.
                 </p>
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     type="button"
-                    onClick={() => handleQuickLogin('superadmin@test.com', 'password123')}
+                    onClick={() => handleQuickFill('superadmin@test.com')}
                     disabled={loading}
                     className="flex flex-col text-left p-3 rounded-2xl bg-white/[0.02] hover:bg-[#1ED760]/5 border border-white/[0.05] hover:border-[#1ED760]/20 transition-all duration-200 group"
                   >
@@ -331,7 +327,7 @@ const LoginPage = () => {
 
                   <button
                     type="button"
-                    onClick={() => handleQuickLogin('admin@test.com', 'password123')}
+                    onClick={() => handleQuickFill('admin@test.com')}
                     disabled={loading}
                     className="flex flex-col text-left p-3 rounded-2xl bg-white/[0.02] hover:bg-[#1ED760]/5 border border-white/[0.05] hover:border-[#1ED760]/20 transition-all duration-200 group"
                   >
