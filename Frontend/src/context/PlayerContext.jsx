@@ -340,8 +340,33 @@ export const PlayerProvider = ({ children }) => {
       
       if (audioRef.current) {
         audioRef.current.src = playableUrl;
-        await audioRef.current.play();
-        setPlayStatus(true);
+        audioRef.current.load();
+
+        // Wait for the audio to be ready before calling play()
+        await new Promise((resolve, reject) => {
+          const onCanPlay = () => {
+            audioRef.current.removeEventListener('canplay', onCanPlay);
+            audioRef.current.removeEventListener('error', onError);
+            resolve();
+          };
+          const onError = (e) => {
+            audioRef.current.removeEventListener('canplay', onCanPlay);
+            audioRef.current.removeEventListener('error', onError);
+            reject(new Error('Audio failed to load'));
+          };
+          audioRef.current.addEventListener('canplay', onCanPlay);
+          audioRef.current.addEventListener('error', onError);
+        });
+
+        const playPromise = audioRef.current.play();
+        if (playPromise !== undefined) {
+          playPromise
+            .then(() => setPlayStatus(true))
+            .catch(err => {
+              console.error('❌ Playback was prevented:', err);
+              setPlayStatus(false);
+            });
+        }
       }
     } catch (error) {
       console.error('❌ Error playing track:', error);

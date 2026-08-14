@@ -18,12 +18,19 @@ const LoadingSpinner = ({
     large: 'text-lg'
   };
 
+  // Inline-friendly: small size gets no padding so it won't inflate buttons
+  const paddingClasses = {
+    small: '',
+    medium: 'p-4',
+    large: 'p-8'
+  };
+
   return (
-    <div className={`flex flex-col items-center justify-center p-8 ${className}`}>
+    <div className={`flex flex-col items-center justify-center ${paddingClasses[size]} ${className}`}>
       <div className="relative">
         <Music className={`${sizeClasses[size]} text-green-500 animate-spin`} />
       </div>
-      {text && (
+      {text && size !== 'small' && (
         <p className={`${textSizeClasses[size]} text-gray-400 mt-4 font-medium`}>
           {text}
         </p>
