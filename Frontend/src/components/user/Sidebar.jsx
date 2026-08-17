@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   Home, Search, Library, Plus, Heart, Download, 
   ChevronRight, ChevronDown, Play, Music, Clock,
@@ -9,6 +9,7 @@ import { usePlayer } from '../../context/PlayerContext.jsx';
 
 const Sidebar = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { 
     albumsData, 
     songsData, 
@@ -243,43 +244,97 @@ const Sidebar = () => {
   return (
     <div className="w-[350px] flex flex-col gap-2 flex-shrink-0">
       {/* Top Navigation */}
-      <div className="bg-[#121212]/50 backdrop-blur-md border border-white/[0.04] rounded-lg p-6">
-        <div className="space-y-6">
-          <div 
-            onClick={() => navigate("/")} 
-            className="flex items-center gap-5 text-gray-300 hover:text-white cursor-pointer transition-colors group"
-          >
-            <Home className="w-6 h-6 group-hover:scale-110 transition-transform" />
-            <span className="font-bold text-[16px]">Home</span>
-          </div>
-          
-          <div 
-            onClick={() => navigate("/profile/mine")} 
-            className="flex items-center gap-5 text-gray-300 hover:text-white cursor-pointer transition-colors group"
-          >
-            <Music className="w-6 h-6 group-hover:scale-110 transition-transform text-[#1ED760]" />
-            <span className="font-bold text-[16px]">My Uploads</span>
-          </div>
-          
-          <div 
-            onClick={() => {
-              const input = document.querySelector('input[placeholder*="Search songs"]');
-              if (input) {
-                input.focus();
-              } else {
-                navigate("/");
-                setTimeout(() => {
-                  const inputAfterNav = document.querySelector('input[placeholder*="Search songs"]');
-                  if (inputAfterNav) inputAfterNav.focus();
-                }, 150);
-              }
+      <div style={{ background: 'rgba(18,18,18,0.5)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.04)', borderRadius: '8px', padding: '12px' }}>
+
+        {/* Nav item helper — rendered inline so styles are 100% reliable */}
+        {[
+          {
+            label: 'Home',
+            icon: (active) => (
+              <Home style={{ width: 22, height: 22, color: active ? '#1ED760' : '#9ca3af', flexShrink: 0, transition: 'transform 0.15s' }} />
+            ),
+            active: location.pathname === '/',
+            onClick: () => navigate('/'),
+          },
+          {
+            label: 'My Uploads',
+            icon: (active) => (
+              <Music style={{ width: 22, height: 22, color: active ? '#1ED760' : '#9ca3af', flexShrink: 0, transition: 'transform 0.15s' }} />
+            ),
+            active: location.pathname.startsWith('/profile'),
+            onClick: () => navigate('/profile/mine'),
+          },
+          {
+            label: 'Search',
+            icon: (active) => (
+              <Search style={{ width: 22, height: 22, color: active ? '#1ED760' : '#9ca3af', flexShrink: 0, transition: 'transform 0.15s' }} />
+            ),
+            // Search lives inside the home page — it is never a standalone "active" route
+            active: false,
+            onClick: () => {
+              navigate('/');
+              setTimeout(() => {
+                const input = document.querySelector('input[placeholder*="Search songs"]');
+                if (input) { input.focus(); input.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+              }, 100);
+            },
+          },
+        ].map(({ label, icon, active, onClick }) => (
+          <div
+            key={label}
+            onClick={onClick}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 14,
+              cursor: 'pointer',
+              borderRadius: 8,
+              padding: '10px 12px',
+              marginBottom: 2,
+              transition: 'background 0.15s',
+              background: active ? 'rgba(30,215,96,0.13)' : 'transparent',
+              position: 'relative',
+              overflow: 'hidden',
             }}
-            className="flex items-center gap-5 text-gray-300 hover:text-white cursor-pointer transition-colors group"
+            onMouseEnter={e => { if (!active) e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
+            onMouseLeave={e => { if (!active) e.currentTarget.style.background = 'transparent'; }}
           >
-            <Search className="w-6 h-6 group-hover:scale-110 transition-transform" />
-            <span className="font-bold text-[16px]">Search</span>
+            {/* Green left-bar indicator — absolutely positioned INSIDE the item */}
+            {active && (
+              <span style={{
+                position: 'absolute',
+                left: 0,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                width: 3,
+                height: 20,
+                borderRadius: '0 3px 3px 0',
+                background: '#1ED760',
+              }} />
+            )}
+            {icon(active)}
+            <span style={{
+              fontSize: 15,
+              fontWeight: active ? 800 : 600,
+              color: active ? '#1ED760' : '#9ca3af',
+              letterSpacing: active ? '-0.01em' : 'normal',
+            }}>
+              {label}
+            </span>
+            {/* Active dot on right */}
+            {active && (
+              <span style={{
+                marginLeft: 'auto',
+                width: 7,
+                height: 7,
+                borderRadius: '50%',
+                background: '#1ED760',
+                flexShrink: 0,
+              }} />
+            )}
           </div>
-        </div>
+        ))}
+
       </div>
       
       {/* Your Library */}

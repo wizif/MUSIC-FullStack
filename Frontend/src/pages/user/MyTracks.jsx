@@ -400,7 +400,7 @@ const MyTracks = () => {
               >
                 {uploading ? (
                   <div className="flex items-center gap-2">
-                    <LoadingSpinner size="small" className="text-black" />
+                    <LoadingSpinner size="small" inline />
                     <span>Uploading...</span>
                   </div>
                 ) : (
@@ -432,8 +432,7 @@ const MyTracks = () => {
           {/* Loading songs */}
           {loadingSongs ? (
             <div className="flex flex-col items-center justify-center py-16 text-gray-500 space-y-3">
-              <LoadingSpinner size="large" />
-              <span className="text-sm">Fetching tracks...</span>
+              <LoadingSpinner size="large" text="Fetching tracks..." />
             </div>
           ) : mySongs.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center text-gray-500 space-y-4">
