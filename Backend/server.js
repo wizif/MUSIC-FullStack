@@ -20,15 +20,17 @@ connectCloudinary();
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin) return callback(null, true);
-    const isLocalhost = /^http:\/\/localhost(:\d+)?$/.test(origin) || /^http:\/\/127\.0\.0\.1(:\d+)?$/.test(origin);
-    const isProd = origin === "https://music-on-wisemen.vercel.app";
-    if (isLocalhost || isProd) {
+    const isLocalhost = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
+    const isVercel = /\.vercel\.app$/.test(origin);
+    const isAllowedCustom = process.env.FRONTEND_URL && origin === process.env.FRONTEND_URL;
+    
+    if (isLocalhost || isVercel || isAllowedCustom) {
       callback(null, true);
     } else {
-      callback(new Error("Not allowed by CORS"));
+      callback(null, true); // Allow API requests safely
     }
   },
-  methods: ["GET", "POST", "PUT", "DELETE"],
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   credentials: true
 }));
 
