@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Home, Plus, Album, Music, List, Settings, Users } from 'lucide-react';
+import EchoText from '../shared/EchoText.jsx';
 
 const AdminSidebar = () => {
   const navigate = useNavigate();
@@ -27,11 +28,25 @@ const AdminSidebar = () => {
     <div className="w-64 bg-black/30 backdrop-blur-md border-r border-white/[0.05] flex flex-col">
       {/* Logo/Header */}
       <div className="p-6 border-b border-white/[0.05]">
-        <h1 className="text-2xl font-bold text-white flex items-center">
-          <Music className="mr-3 text-green-500" />
-          MusicOn Admin
-        </h1>
-        <p className="text-gray-400 text-sm mt-1">Manage your music library</p>
+        <EchoText
+          text="MusicOn"
+          echoes={7}
+          lag={0.20}
+          offset={22}
+          direction="right"
+          fade={0.65}
+          blur={2}
+          tint="#1ED760"
+          mode="both"
+          cursorRadius={240}
+          duration={750}
+          ease="ease-out"
+          fontSize="1.45rem"
+          fontWeight={800}
+          color="#ffffff"
+        />
+        <p className="text-green-500 text-xs font-semibold uppercase tracking-widest mt-2">Admin Panel</p>
+        <p className="text-gray-500 text-xs mt-0.5">Manage your music library</p>
       </div>
       
       {/* Navigation */}

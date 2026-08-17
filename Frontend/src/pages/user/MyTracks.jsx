@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Upload, Music, Image, Plus, X, Trash2, CheckCircle, AlertCircle, Sparkles, BarChart2, ShieldAlert } from 'lucide-react';
-import { songAPI, validateFile } from '../../utils/api.js';
+import { Upload, Music, Image, Plus, X, Trash2, CheckCircle, AlertCircle, Sparkles, BarChart2, ShieldAlert, Disc3 } from 'lucide-react';
+import { songAPI, albumAPI, validateFile } from '../../utils/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { usePlayer } from '../../context/PlayerContext.jsx';
 import SongItem from '../../components/shared/SongItem.jsx';
@@ -29,6 +29,42 @@ const MyTracks = () => {
 
   const audioInputRef = useRef(null);
   const imageInputRef = useRef(null);
+
+  // ── Inline album creation ──────────────────────
+  const [showNewAlbum, setShowNewAlbum] = useState(false);
+  const [newAlbumName, setNewAlbumName] = useState('');
+  const [newAlbumImg, setNewAlbumImg] = useState(null);
+  const [newAlbumImgPreview, setNewAlbumImgPreview] = useState(null);
+  const [newAlbumError, setNewAlbumError] = useState('');
+  const [creatingAlbum, setCreatingAlbum] = useState(false);
+  const newAlbumImgRef = useRef(null);
+
+  const handleNewAlbumImg = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    try { validateFile(file, 'image'); setNewAlbumImg(file); setNewAlbumImgPreview(URL.createObjectURL(file)); setNewAlbumError(''); }
+    catch (err) { setNewAlbumError(err.message); }
+  };
+
+  const handleCreateAlbumInline = async () => {
+    if (!newAlbumName.trim()) { setNewAlbumError('Album name required'); return; }
+    if (!newAlbumImg) { setNewAlbumError('Cover art required'); return; }
+    setCreatingAlbum(true); setNewAlbumError('');
+    try {
+      const res = await albumAPI.add({ name: newAlbumName.trim(), desc: '', bgColour: '#121212', imageFile: newAlbumImg });
+      if (!res.success) throw new Error(res.message || 'Failed');
+      await loadSongs(); // refresh global album list
+      // Auto-select the just-created album
+      setFormData(prev => ({ ...prev, album: newAlbumName.trim() }));
+      setShowNewAlbum(false);
+      setNewAlbumName(''); setNewAlbumImg(null); setNewAlbumImgPreview(null);
+      if (newAlbumImgRef.current) newAlbumImgRef.current.value = '';
+    } catch (err) {
+      setNewAlbumError(err.message || 'Failed to create album');
+    } finally {
+      setCreatingAlbum(false);
+    }
+  };
 
   const fetchMySongs = async () => {
     setLoadingSongs(true);
@@ -288,18 +324,82 @@ const MyTracks = () => {
                 </label>
                 <select
                   name="album"
-                  value={formData.album}
-                  onChange={handleInputChange}
-                  className="w-full p-3.5 bg-black/40 border border-white/[0.08] hover:border-white/[0.18] focus:border-green-500/60 focus:outline-none focus:ring-2 focus:ring-green-500/10 rounded-2xl text-white focus:bg-gray-900 text-sm transition-all duration-300"
-                  disabled={uploading}
+                  value={showNewAlbum ? '__new__' : formData.album}
+                  onChange={(e) => {
+                    if (e.target.value === '__new__') {
+                      setShowNewAlbum(true);
+                      setNewAlbumError('');
+                    } else {
+                      setShowNewAlbum(false);
+                      handleInputChange(e);
+                    }
+                  }}
+                  className="w-full p-3.5 bg-black/40 border border-white/[0.08] hover:border-white/[0.18] focus:border-green-500/60 focus:outline-none rounded-2xl text-white focus:bg-gray-900 text-sm transition-all duration-300"
+                  disabled={uploading || creatingAlbum}
                 >
                   <option value="">None (Single)</option>
                   {albumsData.map((album) => (
-                    <option key={album._id} value={album.name}>
-                      {album.name}
-                    </option>
+                    <option key={album._id} value={album.name}>{album.name}</option>
                   ))}
+                  <option value="__new__">＋ Create new album…</option>
                 </select>
+
+                {/* Inline album creator — shown when "Create new album" is selected */}
+                {showNewAlbum && (
+                  <div className="mt-3 p-4 bg-black/30 border border-green-500/20 rounded-2xl space-y-3">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Disc3 className="w-4 h-4 text-green-400" />
+                      <span className="text-xs font-bold text-green-400 uppercase tracking-wider">New Album</span>
+                    </div>
+
+                    {newAlbumError && (
+                      <p className="text-rose-400 text-xs font-medium">{newAlbumError}</p>
+                    )}
+
+                    <input
+                      type="text"
+                      placeholder="Album name *"
+                      value={newAlbumName}
+                      onChange={(e) => setNewAlbumName(e.target.value)}
+                      className="w-full p-3 bg-black/40 border border-white/[0.08] focus:border-green-500/60 focus:outline-none rounded-xl text-white placeholder-gray-500 text-sm transition-all"
+                      disabled={creatingAlbum}
+                    />
+
+                    {/* Cover art mini-picker */}
+                    {!newAlbumImgPreview ? (
+                      <div
+                        onClick={() => !creatingAlbum && newAlbumImgRef.current?.click()}
+                        className="border-2 border-dashed border-white/[0.08] hover:border-green-500/40 rounded-xl p-4 text-center cursor-pointer transition-all group bg-black/20"
+                      >
+                        <Image className="w-6 h-6 text-gray-500 mx-auto mb-1 group-hover:text-green-400" />
+                        <p className="text-[11px] text-gray-500 group-hover:text-white">Upload cover art *</p>
+                      </div>
+                    ) : (
+                      <div className="relative rounded-xl overflow-hidden" style={{ height: 80 }}>
+                        <img src={newAlbumImgPreview} alt="cover" className="w-full h-full object-cover" />
+                        <button type="button"
+                          onClick={() => { setNewAlbumImg(null); setNewAlbumImgPreview(null); if (newAlbumImgRef.current) newAlbumImgRef.current.value = ''; }}
+                          className="absolute top-1.5 right-1.5 p-1 rounded-full bg-rose-600 text-white">
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    )}
+                    <input ref={newAlbumImgRef} type="file" accept="image/*" onChange={handleNewAlbumImg} className="hidden" />
+
+                    <div className="flex gap-2">
+                      <button type="button"
+                        onClick={() => { setShowNewAlbum(false); setNewAlbumName(''); setNewAlbumImg(null); setNewAlbumImgPreview(null); setFormData(prev => ({ ...prev, album: '' })); }}
+                        className="flex-1 py-2 text-xs font-bold text-gray-400 hover:text-white rounded-xl border border-white/[0.08] transition-all"
+                        disabled={creatingAlbum}>Cancel</button>
+                      <button type="button"
+                        onClick={handleCreateAlbumInline}
+                        className="flex-1 py-2 text-xs font-bold bg-green-500 hover:bg-green-400 text-black rounded-xl transition-all"
+                        disabled={creatingAlbum}>
+                        {creatingAlbum ? 'Creating…' : 'Create Album'}
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Artwork Image Select */}

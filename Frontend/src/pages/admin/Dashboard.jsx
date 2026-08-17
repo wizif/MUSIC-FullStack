@@ -16,6 +16,7 @@ import {
 import { usePlayer } from '../../context/PlayerContext.jsx';
 import LoadingSpinner from '../../components/shared/LoadingSpinner.jsx';
 import api from '../../utils/api.js';
+import BorderGlow from '../../components/shared/BorderGlow.jsx';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -135,22 +136,43 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
         {stats.map((stat, index) => {
           const Icon = stat.icon;
+          // Map each card's accent to BorderGlow theme
+          const glowThemes = [
+            { glowColor: '142 70 45', colors: ['#1ED760', '#14a84a', '#0d7a36'] }, // green
+            { glowColor: '217 80 55', colors: ['#38bdf8', '#60a5fa', '#818cf8'] }, // blue
+            { glowColor: '43 80 55',  colors: ['#fbbf24', '#f59e0b', '#d97706'] }, // amber
+            { glowColor: '270 70 50', colors: ['#c084fc', '#a855f7', '#9333ea'] }, // purple
+          ];
+          const theme = glowThemes[index] || glowThemes[0];
           return (
-            <div key={index} className="bg-[#18181f] border border-white/[0.05] rounded-2xl p-6 hover:bg-[#20202b] transition-all duration-300">
-              <div className="flex items-center justify-between mb-4">
-                <div className={`${stat.bg} p-3 rounded-xl`}>
-                  <Icon className={`h-6 w-6 ${stat.color}`} />
+            <BorderGlow
+              key={index}
+              edgeSensitivity={28}
+              glowColor={theme.glowColor}
+              backgroundColor="#18181f"
+              borderRadius={16}
+              glowRadius={28}
+              glowIntensity={1.0}
+              coneSpread={26}
+              animated
+              colors={theme.colors}
+              fillOpacity={0.25}
+            >
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className={`${stat.bg} p-3 rounded-xl`}>
+                    <Icon className={`h-6 w-6 ${stat.color}`} />
+                  </div>
+                </div>
+                <div>
+                  <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider">{stat.label}</p>
+                  <p className="text-3xl font-extrabold text-white mt-1">{stat.value}</p>
+                  {stat.subtitle && (
+                    <p className="text-gray-500 text-xs mt-1.5 font-medium">{stat.subtitle}</p>
+                  )}
                 </div>
               </div>
-              
-              <div>
-                <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider">{stat.label}</p>
-                <p className="text-3xl font-extrabold text-white mt-1">{stat.value}</p>
-                {stat.subtitle && (
-                  <p className="text-gray-500 text-xs mt-1.5 font-medium">{stat.subtitle}</p>
-                )}
-              </div>
-            </div>
+            </BorderGlow>
           );
         })}
       </div>

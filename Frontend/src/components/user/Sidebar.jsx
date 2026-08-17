@@ -1,11 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { 
-  Home, Search, Library, Plus, Heart, Download, 
-  ChevronRight, ChevronDown, Play, Music, Clock,
-  List, Grid, MoreHorizontal, Trash2, X
+  Home, Search, Library, Plus, Heart,
+  ChevronRight, ChevronDown, Play, Music,
+  List, Grid, Trash2, X, Disc3, Image
 } from 'lucide-react';
 import { usePlayer } from '../../context/PlayerContext.jsx';
+import { albumAPI, validateFile } from '../../utils/api.js';
+import EchoText from '../shared/EchoText.jsx';
 
 const Sidebar = () => {
   const navigate = useNavigate();
@@ -13,13 +15,13 @@ const Sidebar = () => {
   const { 
     albumsData, 
     songsData, 
-    playWithId, 
     playTrack,
     track, 
     playStatus, 
     playlists, 
     createPlaylist,
-    deletePlaylist
+    deletePlaylist,
+    loadSongs,
   } = usePlayer();
   const [imageErrors, setImageErrors] = useState(new Set());
   const [expandedItems, setExpandedItems] = useState(new Set());
@@ -32,6 +34,73 @@ const Sidebar = () => {
   const [isPrivatePlaylist, setIsPrivatePlaylist] = useState(true);
   const [playlistError, setPlaylistError] = useState('');
   const [creatingPlaylistState, setCreatingPlaylistState] = useState(false);
+
+  // Create menu dropdown state
+  const [showCreateMenu, setShowCreateMenu] = useState(false);
+  const createMenuRef = useRef(null);
+
+  // Close create menu on outside click
+  React.useEffect(() => {
+    const handler = (e) => {
+      if (createMenuRef.current && !createMenuRef.current.contains(e.target)) {
+        setShowCreateMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  // Album Creator Modal state
+  const [isAlbumModalOpen, setIsAlbumModalOpen] = useState(false);
+  const [albumName, setAlbumName] = useState('');
+  const [albumDesc, setAlbumDesc] = useState('');
+  const [albumImageFile, setAlbumImageFile] = useState(null);
+  const [albumImagePreview, setAlbumImagePreview] = useState(null);
+  const [albumError, setAlbumError] = useState('');
+  const [creatingAlbum, setCreatingAlbum] = useState(false);
+  const albumImageRef = useRef(null);
+
+  const handleAlbumImageChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+      validateFile(file, 'image');
+      setAlbumImageFile(file);
+      setAlbumImagePreview(URL.createObjectURL(file));
+      setAlbumError('');
+    } catch (err) {
+      setAlbumError(err.message);
+    }
+  };
+
+  const handleAlbumSubmit = async (e) => {
+    e.preventDefault();
+    if (!albumName.trim()) { setAlbumError('Album name is required'); return; }
+    if (!albumImageFile) { setAlbumError('Cover art is required'); return; }
+    setCreatingAlbum(true);
+    setAlbumError('');
+    try {
+      const res = await albumAPI.add({
+        name: albumName.trim(),
+        desc: albumDesc.trim(),
+        bgColour: '#121212',
+        imageFile: albumImageFile,
+      });
+      if (!res.success) throw new Error(res.message || 'Failed to create album');
+      // Reload global album list
+      await loadSongs();
+      setIsAlbumModalOpen(false);
+      setAlbumName('');
+      setAlbumDesc('');
+      setAlbumImageFile(null);
+      setAlbumImagePreview(null);
+      if (albumImageRef.current) albumImageRef.current.value = '';
+    } catch (err) {
+      setAlbumError(err.message || 'Failed to create album');
+    } finally {
+      setCreatingAlbum(false);
+    }
+  };
 
   // Find Liked Songs playlist
   const likedSongsPlaylist = playlists.find(p => p.name === 'Liked Songs');
@@ -243,6 +312,27 @@ const Sidebar = () => {
 
   return (
     <div className="w-[350px] flex flex-col gap-2 flex-shrink-0">
+      {/* App Logo */}
+      <div style={{ padding: '16px 12px 8px', overflow: 'hidden' }}>
+        <EchoText
+          text="MusicOn"
+          echoes={8}
+          lag={0.22}
+          offset={28}
+          direction="right"
+          fade={0.68}
+          blur={2.5}
+          tint="#1ED760"
+          mode="both"
+          cursorRadius={280}
+          duration={800}
+          ease="ease-out"
+          fontSize="1.7rem"
+          fontWeight={800}
+          color="#ffffff"
+        />
+      </div>
+
       {/* Top Navigation */}
       <div style={{ background: 'rgba(18,18,18,0.5)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.04)', borderRadius: '8px', padding: '12px' }}>
 
@@ -346,20 +436,43 @@ const Sidebar = () => {
             <span className="font-bold text-[16px]">Your Library</span>
           </div>
           <div className="flex items-center gap-2">
-            <button 
+            <button
               onClick={() => setViewMode(viewMode === 'list' ? 'grid' : 'list')}
               className="text-gray-400 hover:text-white transition-colors hover:scale-110 transform p-1 hover:bg-[#1a1a1a] rounded"
               title={viewMode === 'list' ? 'Grid view' : 'List view'}
             >
               {viewMode === 'list' ? <Grid className="w-4 h-4" /> : <List className="w-4 h-4" />}
             </button>
-            <button 
-              onClick={handleCreatePlaylist}
-              className="text-gray-400 hover:text-white transition-colors hover:scale-110 transform p-1 hover:bg-[#1a1a1a] rounded"
-              title="Create playlist"
-            >
-              <Plus className="w-4 h-4" />
-            </button>
+
+            {/* Single + button → dropdown: Playlist / Album */}
+            <div className="relative" ref={createMenuRef}>
+              <button
+                onClick={() => setShowCreateMenu(prev => !prev)}
+                className="text-gray-400 hover:text-white transition-colors hover:scale-110 transform p-1 hover:bg-[#1a1a1a] rounded"
+                title="Create…"
+              >
+                <Plus className="w-4 h-4" />
+              </button>
+
+              {showCreateMenu && (
+                <div className="absolute right-0 top-full mt-1 w-44 bg-[#18181f] border border-white/[0.08] rounded-xl shadow-2xl overflow-hidden z-30 py-1">
+                  <button
+                    onClick={() => { setShowCreateMenu(false); handleCreatePlaylist(); }}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/[0.06] transition-colors text-left"
+                  >
+                    <Plus className="w-3.5 h-3.5 text-green-500 flex-shrink-0" />
+                    New Playlist
+                  </button>
+                  <button
+                    onClick={() => { setShowCreateMenu(false); setIsAlbumModalOpen(true); setAlbumError(''); }}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/[0.06] transition-colors text-left"
+                  >
+                    <Disc3 className="w-3.5 h-3.5 text-green-500 flex-shrink-0" />
+                    New Album
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -554,62 +667,126 @@ const Sidebar = () => {
           )}
         </div>
 
-        {/* Custom Create Playlist Modal Overlay */}
+        {/* ── Create Playlist Modal ── */}
         {isCreateModalOpen && (
           <div className="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-[#18181f] border border-white/[0.08] p-6 rounded-2xl w-full max-w-sm shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-200">
+            <div className="bg-[#18181f] border border-white/[0.08] p-6 rounded-2xl w-full max-w-sm shadow-2xl space-y-5">
               <div className="flex justify-between items-center pb-2 border-b border-white/[0.06]">
                 <h3 className="text-lg font-bold text-white flex items-center gap-2">
                   <Plus className="w-5 h-5 text-green-500" />
                   Create Playlist
                 </h3>
-                <button 
-                  onClick={() => setIsCreateModalOpen(false)}
-                  className="text-gray-400 hover:text-white transition-colors"
-                >
+                <button onClick={() => setIsCreateModalOpen(false)} className="text-gray-400 hover:text-white transition-colors">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              {playlistError && (
+                <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs font-semibold">{playlistError}</div>
+              )}
+              <form onSubmit={handleCreateSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-gray-400 uppercase tracking-wider pl-1">Playlist Name *</label>
+                  <input
+                    type="text" value={newPlaylistName}
+                    onChange={(e) => setNewPlaylistName(e.target.value)}
+                    placeholder="My Awesome Playlist"
+                    className="w-full p-3 bg-black/40 border border-white/[0.08] hover:border-white/[0.18] focus:border-green-500/60 focus:outline-none rounded-xl text-white placeholder-gray-500 text-sm transition-all"
+                    disabled={creatingPlaylistState} required autoFocus
+                  />
+                </div>
+                <div className="flex gap-3 justify-end pt-2">
+                  <button type="button" onClick={() => setIsCreateModalOpen(false)}
+                    className="px-4 py-2.5 text-xs font-bold text-gray-400 hover:text-white rounded-xl transition-all"
+                    disabled={creatingPlaylistState}>Cancel</button>
+                  <button type="submit"
+                    className="px-5 py-2.5 text-xs font-bold bg-green-500 hover:bg-green-400 text-black rounded-xl transition-all min-w-[80px]"
+                    disabled={creatingPlaylistState}>
+                    {creatingPlaylistState ? 'Creating...' : 'Create'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* ── Create Album Modal ── */}
+        {isAlbumModalOpen && (
+          <div className="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-[#18181f] border border-white/[0.08] p-6 rounded-2xl w-full max-w-sm shadow-2xl space-y-5">
+              <div className="flex justify-between items-center pb-2 border-b border-white/[0.06]">
+                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                  <Disc3 className="w-5 h-5 text-green-500" />
+                  Create Album
+                </h3>
+                <button onClick={() => { setIsAlbumModalOpen(false); setAlbumImageFile(null); setAlbumImagePreview(null); }}
+                  className="text-gray-400 hover:text-white transition-colors">
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
-              {playlistError && (
-                <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs font-semibold">
-                  {playlistError}
-                </div>
+              {albumError && (
+                <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs font-semibold">{albumError}</div>
               )}
 
-              <form onSubmit={handleCreateSubmit} className="space-y-4">
+              <form onSubmit={handleAlbumSubmit} className="space-y-4">
+                {/* Album Name */}
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-gray-400 uppercase tracking-wider pl-1">
-                    Playlist Name *
-                  </label>
+                  <label className="text-xs font-bold text-gray-400 uppercase tracking-wider pl-1">Album Name *</label>
                   <input
-                    type="text"
-                    value={newPlaylistName}
-                    onChange={(e) => setNewPlaylistName(e.target.value)}
-                    placeholder="My Awesome Playlist"
-                    className="w-full p-3 bg-black/40 border border-white/[0.08] hover:border-white/[0.18] focus:border-green-500/60 focus:outline-none focus:ring-2 focus:ring-green-500/10 rounded-xl text-white placeholder-gray-500 text-sm transition-all duration-300"
-                    disabled={creatingPlaylistState}
-                    required
-                    autoFocus
+                    type="text" value={albumName}
+                    onChange={(e) => setAlbumName(e.target.value)}
+                    placeholder="My Album"
+                    className="w-full p-3 bg-black/40 border border-white/[0.08] hover:border-white/[0.18] focus:border-green-500/60 focus:outline-none rounded-xl text-white placeholder-gray-500 text-sm transition-all"
+                    disabled={creatingAlbum} required autoFocus
                   />
                 </div>
 
+                {/* Description (optional) */}
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-gray-400 uppercase tracking-wider pl-1">Description <span className="normal-case font-normal">(optional)</span></label>
+                  <input
+                    type="text" value={albumDesc}
+                    onChange={(e) => setAlbumDesc(e.target.value)}
+                    placeholder="Short description…"
+                    className="w-full p-3 bg-black/40 border border-white/[0.08] hover:border-white/[0.18] focus:border-green-500/60 focus:outline-none rounded-xl text-white placeholder-gray-500 text-sm transition-all"
+                    disabled={creatingAlbum}
+                  />
+                </div>
+
+                {/* Cover Art */}
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-gray-400 uppercase tracking-wider pl-1">Cover Art *</label>
+                  {!albumImagePreview ? (
+                    <div
+                      onClick={() => !creatingAlbum && albumImageRef.current?.click()}
+                      className="border-2 border-dashed border-white/[0.08] hover:border-green-500/50 rounded-xl p-5 text-center cursor-pointer transition-all group bg-black/20"
+                    >
+                      <Image className="w-8 h-8 text-gray-500 mx-auto mb-1.5 group-hover:text-green-400 transition-colors" />
+                      <p className="text-xs text-gray-400 group-hover:text-white transition-colors">Click to upload cover art</p>
+                      <p className="text-[10px] text-gray-600 mt-0.5">JPEG, PNG, WEBP · max 5MB</p>
+                    </div>
+                  ) : (
+                    <div className="relative rounded-xl overflow-hidden" style={{ height: 120 }}>
+                      <img src={albumImagePreview} alt="Cover preview" className="w-full h-full object-cover" />
+                      <button type="button"
+                        onClick={() => { setAlbumImageFile(null); setAlbumImagePreview(null); if (albumImageRef.current) albumImageRef.current.value = ''; }}
+                        className="absolute top-2 right-2 p-1.5 rounded-full bg-rose-600 hover:bg-rose-700 text-white transition-colors">
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  )}
+                  <input ref={albumImageRef} type="file" accept="image/*" onChange={handleAlbumImageChange} className="hidden" disabled={creatingAlbum} />
+                </div>
 
                 <div className="flex gap-3 justify-end pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setIsCreateModalOpen(false)}
-                    className="px-4 py-2.5 text-xs font-bold text-gray-400 hover:text-white bg-transparent rounded-xl transition-all duration-200"
-                    disabled={creatingPlaylistState}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-5 py-2.5 text-xs font-bold bg-green-500 hover:bg-green-400 text-black rounded-xl transition-all duration-200 hover:scale-[1.03] active:scale-[0.97] flex items-center justify-center min-w-[80px]"
-                    disabled={creatingPlaylistState}
-                  >
-                    {creatingPlaylistState ? 'Creating...' : 'Create'}
+                  <button type="button"
+                    onClick={() => { setIsAlbumModalOpen(false); setAlbumImageFile(null); setAlbumImagePreview(null); }}
+                    className="px-4 py-2.5 text-xs font-bold text-gray-400 hover:text-white rounded-xl transition-all"
+                    disabled={creatingAlbum}>Cancel</button>
+                  <button type="submit"
+                    className="px-5 py-2.5 text-xs font-bold bg-green-500 hover:bg-green-400 text-black rounded-xl transition-all min-w-[80px]"
+                    disabled={creatingAlbum}>
+                    {creatingAlbum ? 'Creating...' : 'Create Album'}
                   </button>
                 </div>
               </form>

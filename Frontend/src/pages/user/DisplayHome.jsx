@@ -5,6 +5,7 @@ import { usePlayer } from '../../context/PlayerContext.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import Navbar from '../../components/user/Navbar.jsx';
 import AlbumItem from '../../components/shared/AlbumItem.jsx';
+import BorderGlow from '../../components/shared/BorderGlow.jsx';
 import { fetchSoundCloudDiscovery } from '../../utils/soundcloudApi.js';
 
 /* ────────────────────────────────────────────────
@@ -375,74 +376,97 @@ const DisplayHome = () => {
 
         {/* ── Albums row (only if albums exist or loading) ── */}
         {(albumsLoading || albumsData.length > 0) && (
-          <section>
+          <BorderGlow
+            edgeSensitivity={25}
+            glowColor="142 70 45"
+            backgroundColor="transparent"
+            borderRadius={20}
+            glowRadius={32}
+            glowIntensity={1.1}
+            coneSpread={28}
+            animated
+            colors={['#1ED760', '#14a84a', '#0d7a36']}
+            fillOpacity={0.3}
+            className="w-full"
+          >
+            <section style={{ padding: '20px 24px' }}>
+              <div className="flex items-center justify-between mb-5">
+                <div className="flex items-center gap-2">
+                  <Disc3 className="w-5 h-5 text-green-400" />
+                  <h2 className="text-xl font-bold text-white">Albums</h2>
+                </div>
+              </div>
+
+              {albumsLoading ? (
+                <div className="flex gap-5 overflow-x-auto pb-3">
+                  {[...Array(5)].map((_, i) => <CardSkeleton key={i} />)}
+                </div>
+              ) : (
+                <div className="flex gap-5 overflow-x-auto pb-3">
+                  {albumsData.map(album => (
+                    <AlbumItem key={album._id} album={album} />
+                  ))}
+                </div>
+              )}
+            </section>
+          </BorderGlow>
+        )}
+
+        {/* ── iTunes Discover section ── */}
+        <BorderGlow
+          edgeSensitivity={25}
+          glowColor="199 80 55"
+          backgroundColor="transparent"
+          borderRadius={20}
+          glowRadius={32}
+          glowIntensity={1.0}
+          coneSpread={28}
+          colors={['#38bdf8', '#818cf8', '#f472b6']}
+          fillOpacity={0.25}
+          className="w-full"
+        >
+          <section style={{ padding: '20px 24px' }}>
             <div className="flex items-center justify-between mb-5">
               <div className="flex items-center gap-2">
-                <Disc3 className="w-5 h-5 text-green-400" />
-                <h2 className="text-xl font-bold text-white">Albums</h2>
+                <Headphones className="w-5 h-5 text-green-400" />
+                <h2 className="text-xl font-bold text-white">Discover</h2>
+                {!discoveryLoading && discoveryTracks.length > 0 && (
+                  <span className="text-xs text-gray-500 bg-white/[0.05] px-2 py-0.5 rounded-full capitalize ml-1">
+                    SoundCloud Charts
+                  </span>
+                )}
               </div>
+              <span className="text-xs text-gray-600">via SoundCloud · Full Streams</span>
             </div>
 
-            {albumsLoading ? (
+            {discoveryLoading ? (
               <div className="flex gap-5 overflow-x-auto pb-3">
-                {[...Array(5)].map((_, i) => <CardSkeleton key={i} />)}
+                {[...Array(7)].map((_, i) => <CardSkeleton key={i} />)}
               </div>
             ) : (
               <div className="flex gap-5 overflow-x-auto pb-3">
-                {albumsData.map(album => (
-                  <AlbumItem key={album._id} album={album} />
+                {discoveryTracks.map(item => (
+                  <ExternalTrackCard
+                    key={item._id}
+                    track={item}
+                    isPreviewPlaying={track?._id === item._id && playStatus}
+                    onPreviewToggle={() => {
+                      if (track?._id === item._id) {
+                        if (playStatus) { pause(); } else { play(); }
+                      } else {
+                        playTrack(item, discoveryTracks);
+                      }
+                    }}
+                    isLiked={likedSongIds.has(item._id)}
+                    onLikeToggle={toggleLikeTrack}
+                    playlists={playlists}
+                    onAddToPlaylist={addTrackToPlaylist}
+                  />
                 ))}
               </div>
             )}
           </section>
-        )}
-
-        {/* ── iTunes Discover section ── */}
-        <section>
-          <div className="flex items-center justify-between mb-5">
-            <div className="flex items-center gap-2">
-              <Headphones className="w-5 h-5 text-green-400" />
-              <h2 className="text-xl font-bold text-white">Discover</h2>
-              {!discoveryLoading && discoveryTracks.length > 0 && (
-                <span className="text-xs text-gray-500 bg-white/[0.05] px-2 py-0.5 rounded-full capitalize ml-1">
-                  SoundCloud Charts
-                </span>
-              )}
-            </div>
-            <span className="text-xs text-gray-600">via SoundCloud · Full Streams</span>
-          </div>
-
-          {discoveryLoading ? (
-            <div className="flex gap-5 overflow-x-auto pb-3">
-              {[...Array(7)].map((_, i) => <CardSkeleton key={i} />)}
-            </div>
-          ) : (
-            <div className="flex gap-5 overflow-x-auto pb-3">
-              {discoveryTracks.map(item => (
-                <ExternalTrackCard
-                  key={item._id}
-                  track={item}
-                  isPreviewPlaying={track?._id === item._id && playStatus}
-                  onPreviewToggle={() => {
-                    if (track?._id === item._id) {
-                      if (playStatus) {
-                        pause();
-                      } else {
-                        play();
-                      }
-                    } else {
-                      playTrack(item, discoveryTracks);
-                    }
-                  }}
-                  isLiked={likedSongIds.has(item._id)}
-                  onLikeToggle={toggleLikeTrack}
-                  playlists={playlists}
-                  onAddToPlaylist={addTrackToPlaylist}
-                />
-              ))}
-            </div>
-          )}
-        </section>
+        </BorderGlow>
 
         {/* ── All tracks feed ── */}
         <section>

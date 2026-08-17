@@ -24,11 +24,12 @@ const AlbumItem = ({ album, className = '', showPlayButton = true }) => {
   return (
     <div
       onClick={handleClick}
-      className={`min-w-[180px] p-3 rounded-lg cursor-pointer hover:bg-[#ffffff26] transition-all duration-200 group ${className}`}
+      style={{ width: 176, flexShrink: 0 }}
+      className={`p-3 rounded-lg cursor-pointer hover:bg-[#ffffff26] transition-all duration-200 group ${className}`}
     >
-      <div className="relative">
+      <div className="relative" style={{ width: 152, height: 152 }}>
         <img 
-          className="w-full aspect-square rounded-lg object-cover mb-4 group-hover:brightness-75 transition-all duration-200" 
+          className="w-full h-full rounded-lg object-cover group-hover:brightness-75 transition-all duration-200" 
           src={album.image} 
           alt={album.name}
           onError={(e) => {
@@ -45,7 +46,7 @@ const AlbumItem = ({ album, className = '', showPlayButton = true }) => {
         )}
       </div>
       
-      <div className="space-y-1">
+      <div className="space-y-1 mt-3" style={{ width: 152 }}>
         <p className="font-bold text-white mb-1 truncate" title={album.name}>
           {album.name}
         </p>
