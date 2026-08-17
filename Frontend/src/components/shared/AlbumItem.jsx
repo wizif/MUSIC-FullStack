@@ -24,12 +24,11 @@ const AlbumItem = ({ album, className = '', showPlayButton = true }) => {
   return (
     <div
       onClick={handleClick}
-      style={{ width: 176, flexShrink: 0 }}
-      className={`p-3 rounded-lg cursor-pointer hover:bg-[#ffffff26] transition-all duration-200 group ${className}`}
+      className={`p-3 rounded-xl cursor-pointer hover:bg-[#ffffff15] transition-all duration-200 group w-full ${className}`}
     >
-      <div className="relative" style={{ width: 152, height: 152 }}>
+      <div className="relative rounded-lg overflow-hidden" style={{ width: 152, height: 152 }}>
         <img 
-          className="w-full h-full rounded-lg object-cover group-hover:brightness-75 transition-all duration-200" 
+          className="w-full h-full object-cover group-hover:brightness-75 transition-all duration-200" 
           src={album.image} 
           alt={album.name}
           onError={(e) => {

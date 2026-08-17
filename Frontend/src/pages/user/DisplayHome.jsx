@@ -49,8 +49,8 @@ const ExternalTrackCard = ({ track, isPreviewPlaying, onPreviewToggle, isLiked, 
   }, []);
 
   return (
-    <div className="flex-shrink-0 w-44 group relative">
-      <div className="relative w-44 h-44 rounded-xl overflow-hidden mb-3">
+    <div className="p-3 rounded-xl group relative w-full hover:bg-[#ffffff15] transition-all duration-200">
+      <div className="relative rounded-xl overflow-hidden mb-3" style={{ width: 152, height: 152 }}>
         <img
           src={track.image}
           alt={track.name}
@@ -91,14 +91,14 @@ const ExternalTrackCard = ({ track, isPreviewPlaying, onPreviewToggle, isLiked, 
         )}
       </div>
       
-      <div className="flex items-start justify-between gap-1">
+      <div className="flex items-start justify-between gap-1" style={{ width: 152 }}>
         <div className="min-w-0 flex-1">
           <p className="text-white text-sm font-semibold truncate" title={track.name}>{track.name}</p>
-          <p className="text-gray-500 text-xs truncate mt-0.5">{track.desc}</p>
+          <p className="text-gray-500 text-xs truncate mt-0.5" title={track.desc}>{track.desc}</p>
         </div>
         
         {/* Like and Plus buttons */}
-        <div className="flex items-center gap-1 mt-0.5">
+        <div className="flex items-center gap-1 mt-0.5 flex-shrink-0">
           <button 
             onClick={(e) => { e.stopPropagation(); onLikeToggle(track); }}
             className="text-gray-400 hover:text-green-500 transition-colors p-1"
@@ -135,7 +135,7 @@ const ExternalTrackCard = ({ track, isPreviewPlaying, onPreviewToggle, isLiked, 
           )}
         </div>
       </div>
-      {track.duration && <p className="text-gray-600 text-xs mt-0.5">{track.duration}</p>}
+      {track.duration && <p className="text-gray-600 text-xs mt-0.5 truncate" style={{ width: 152 }}>{track.duration}</p>}
     </div>
   );
 };
@@ -379,78 +379,78 @@ const DisplayHome = () => {
 
         {/* ── Albums row (only if albums exist or loading) ── */}
         {(albumsLoading || albumsData.length > 0) && (
-          <BorderGlow
-            edgeSensitivity={25}
-            glowColor="142 70 45"
-            backgroundColor="transparent"
-            borderRadius={20}
-            glowRadius={32}
-            glowIntensity={1.1}
-            coneSpread={28}
-            animated
-            colors={['#1ED760', '#14a84a', '#0d7a36']}
-            fillOpacity={0.3}
-            className="w-full"
-          >
-            <section style={{ padding: '20px 24px' }}>
-              <div className="flex items-center justify-between mb-5">
-                <div className="flex items-center gap-2">
-                  <Disc3 className="w-5 h-5 text-green-400" />
-                  <h2 className="text-xl font-bold text-white">Albums</h2>
-                </div>
+          <section>
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-2">
+                <Disc3 className="w-5 h-5 text-green-400" />
+                <h2 className="text-xl font-bold text-white">Albums</h2>
               </div>
+            </div>
 
-              {albumsLoading ? (
-                <div className="flex gap-5 overflow-x-auto pb-3">
-                  {[...Array(5)].map((_, i) => <CardSkeleton key={i} />)}
-                </div>
-              ) : (
-                <div className="flex gap-5 overflow-x-auto pb-3">
-                  {albumsData.map(album => (
-                    <AlbumItem key={album._id} album={album} />
-                  ))}
-                </div>
-              )}
-            </section>
-          </BorderGlow>
+            {albumsLoading ? (
+              <div className="flex gap-5 overflow-x-auto overflow-y-hidden pb-4">
+                {[...Array(5)].map((_, i) => <CardSkeleton key={i} />)}
+              </div>
+            ) : (
+              <div className="flex gap-5 overflow-x-auto overflow-y-hidden pb-4 pt-2 px-1">
+                {albumsData.map(album => (
+                  <BorderGlow
+                    key={album._id}
+                    edgeSensitivity={35}
+                    glowColor="142 70 45"
+                    backgroundColor="#14141c"
+                    borderRadius={16}
+                    glowRadius={24}
+                    glowIntensity={1.0}
+                    coneSpread={30}
+                    colors={['#1ED760', '#14a84a', '#0d7a36']}
+                    fillOpacity={0.25}
+                    className="flex-shrink-0"
+                  >
+                    <AlbumItem album={album} />
+                  </BorderGlow>
+                ))}
+              </div>
+            )}
+          </section>
         )}
 
         {/* ── iTunes Discover section ── */}
-        <BorderGlow
-          edgeSensitivity={25}
-          glowColor="199 80 55"
-          backgroundColor="transparent"
-          borderRadius={20}
-          glowRadius={32}
-          glowIntensity={1.0}
-          coneSpread={28}
-          colors={['#38bdf8', '#818cf8', '#f472b6']}
-          fillOpacity={0.25}
-          className="w-full"
-        >
-          <section style={{ padding: '20px 24px' }}>
-            <div className="flex items-center justify-between mb-5">
-              <div className="flex items-center gap-2">
-                <Headphones className="w-5 h-5 text-green-400" />
-                <h2 className="text-xl font-bold text-white">Discover</h2>
-                {!discoveryLoading && discoveryTracks.length > 0 && (
-                  <span className="text-xs text-gray-500 bg-white/[0.05] px-2 py-0.5 rounded-full capitalize ml-1">
-                    SoundCloud Charts
-                  </span>
-                )}
-              </div>
-              <span className="text-xs text-gray-600">via SoundCloud · Full Streams</span>
+        <section>
+          <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center gap-2">
+              <Headphones className="w-5 h-5 text-green-400" />
+              <h2 className="text-xl font-bold text-white">Discover</h2>
+              {!discoveryLoading && discoveryTracks.length > 0 && (
+                <span className="text-xs text-gray-500 bg-white/[0.05] px-2 py-0.5 rounded-full capitalize ml-1">
+                  SoundCloud Charts
+                </span>
+              )}
             </div>
+            <span className="text-xs text-gray-600">via SoundCloud · Full Streams</span>
+          </div>
 
-            {discoveryLoading ? (
-              <div className="flex gap-5 overflow-x-auto pb-3">
-                {[...Array(7)].map((_, i) => <CardSkeleton key={i} />)}
-              </div>
-            ) : (
-              <div className="flex gap-5 overflow-x-auto pb-3">
-                {discoveryTracks.map(item => (
+          {discoveryLoading ? (
+            <div className="flex gap-5 overflow-x-auto overflow-y-hidden pb-4">
+              {[...Array(7)].map((_, i) => <CardSkeleton key={i} />)}
+            </div>
+          ) : (
+            <div className="flex gap-5 overflow-x-auto overflow-y-hidden pb-4 pt-2 px-1">
+              {discoveryTracks.map(item => (
+                <BorderGlow
+                  key={item._id}
+                  edgeSensitivity={35}
+                  glowColor="199 80 55"
+                  backgroundColor="#14141c"
+                  borderRadius={16}
+                  glowRadius={24}
+                  glowIntensity={1.0}
+                  coneSpread={30}
+                  colors={['#38bdf8', '#818cf8', '#f472b6']}
+                  fillOpacity={0.25}
+                  className="flex-shrink-0"
+                >
                   <ExternalTrackCard
-                    key={item._id}
                     track={item}
                     isPreviewPlaying={track?._id === item._id && playStatus}
                     onPreviewToggle={() => {
@@ -465,67 +465,80 @@ const DisplayHome = () => {
                     playlists={playlists}
                     onAddToPlaylist={addTrackToPlaylist}
                   />
+                </BorderGlow>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* ── All tracks feed ── */}
+        <BorderGlow
+          edgeSensitivity={25}
+          glowColor="142 70 45"
+          backgroundColor="#121218"
+          borderRadius={20}
+          glowRadius={32}
+          glowIntensity={1.0}
+          coneSpread={28}
+          colors={['#1ED760', '#38bdf8', '#818cf8']}
+          fillOpacity={0.2}
+          className="w-full min-w-0 max-w-full"
+        >
+          <section className="p-5">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <TrendingUp className="w-5 h-5 text-green-400" />
+                <h2 className="text-xl font-bold text-white">All Tracks</h2>
+                {!songsLoading && songsData.length > 0 && (
+                  <span className="text-xs text-gray-500 bg-white/[0.05] px-2 py-0.5 rounded-full ml-1">
+                    {songsData.length}
+                  </span>
+                )}
+              </div>
+              {!songsLoading && songsData.length > 0 && (
+                <button
+                  onClick={() => navigate('/profile/mine')}
+                  className="text-xs font-semibold text-green-400 hover:text-green-300 border border-green-500/30 hover:border-green-400/50 px-3 py-1.5 rounded-full transition-all flex items-center gap-1.5"
+                >
+                  <Upload className="w-3 h-3" />
+                  Upload
+                </button>
+              )}
+            </div>
+
+            {songsLoading ? (
+              <div className="space-y-1">
+                {[...Array(8)].map((_, i) => <SongRowSkeleton key={i} />)}
+              </div>
+            ) : songsData.length === 0 ? (
+              <EmptyFeed navigate={navigate} />
+            ) : (
+              <div className="space-y-0.5">
+                {/* Table header */}
+                <div className="flex items-center gap-4 px-3 pb-2 border-b border-white/[0.06] mb-1">
+                  <span className="w-5 text-center text-xs text-gray-600">#</span>
+                  <span className="w-11 flex-shrink-0" />
+                  <span className="flex-1 text-xs text-gray-500 uppercase tracking-wider font-semibold">Title</span>
+                  <span className="text-xs text-gray-500 uppercase tracking-wider font-semibold hidden md:block w-[120px]">Album</span>
+                  <span className="text-xs text-gray-500 w-10 text-right">⏱</span>
+                </div>
+                {songsData.map((song, i) => (
+                  <SongRow
+                    key={song._id}
+                    song={song}
+                    index={i}
+                    isPlaying={track?._id === song._id && playStatus}
+                    onPlay={(s) => playTrack(s, songsData)}
+                    isLiked={likedSongIds.has(song._id)}
+                    onLikeToggle={toggleLikeTrack}
+                    playlists={playlists}
+                    onAddToPlaylist={addTrackToPlaylist}
+                  />
                 ))}
               </div>
             )}
           </section>
         </BorderGlow>
-
-        {/* ── All tracks feed ── */}
-        <section>
-          <div className="flex items-center justify-between mb-5">
-            <div className="flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-green-400" />
-              <h2 className="text-xl font-bold text-white">All Tracks</h2>
-              {!songsLoading && songsData.length > 0 && (
-                <span className="text-xs text-gray-500 bg-white/[0.05] px-2 py-0.5 rounded-full ml-1">
-                  {songsData.length}
-                </span>
-              )}
-            </div>
-            {!songsLoading && songsData.length > 0 && (
-              <button
-                onClick={() => navigate('/profile/mine')}
-                className="text-xs font-semibold text-green-400 hover:text-green-300 border border-green-500/30 hover:border-green-400/50 px-3 py-1.5 rounded-full transition-all flex items-center gap-1.5"
-              >
-                <Upload className="w-3 h-3" />
-                Upload
-              </button>
-            )}
-          </div>
-
-          {songsLoading ? (
-            <div className="space-y-1">
-              {[...Array(8)].map((_, i) => <SongRowSkeleton key={i} />)}
-            </div>
-          ) : songsData.length === 0 ? (
-            <EmptyFeed navigate={navigate} />
-          ) : (
-            <div className="space-y-0.5">
-              {/* Table header */}
-              <div className="flex items-center gap-4 px-3 pb-2 border-b border-white/[0.06] mb-1">
-                <span className="w-5 text-center text-xs text-gray-600">#</span>
-                <span className="w-11 flex-shrink-0" />
-                <span className="flex-1 text-xs text-gray-500 uppercase tracking-wider font-semibold">Title</span>
-                <span className="text-xs text-gray-500 uppercase tracking-wider font-semibold hidden md:block w-[120px]">Album</span>
-                <span className="text-xs text-gray-500 w-10 text-right">⏱</span>
-              </div>
-              {songsData.map((song, i) => (
-                <SongRow
-                  key={song._id}
-                  song={song}
-                  index={i}
-                  isPlaying={track?._id === song._id && playStatus}
-                  onPlay={(s) => playTrack(s, songsData)}
-                  isLiked={likedSongIds.has(song._id)}
-                  onLikeToggle={toggleLikeTrack}
-                  playlists={playlists}
-                  onAddToPlaylist={addTrackToPlaylist}
-                />
-              ))}
-            </div>
-          )}
-        </section>
 
       </div>
     </div>

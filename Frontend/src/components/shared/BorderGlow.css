@@ -12,6 +12,8 @@
   isolation: isolate;
   transform: translate3d(0, 0, 0.01px);
   display: grid;
+  min-width: 0;
+  max-width: 100%;
   border: 1px solid rgb(255 255 255 / 15%);
   background: var(--card-bg, #120F17);
   overflow: visible;
@@ -136,6 +138,8 @@
   display: flex;
   flex-direction: column;
   position: relative;
-  overflow: auto;
+  overflow: visible;
+  min-width: 0;
+  max-width: 100%;
   z-index: 1;
 }
