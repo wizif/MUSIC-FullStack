@@ -11,7 +11,21 @@ export const DEFAULT_VALUES = {
 };
 
 // API Configuration
-export const API_BASE_URL = (import.meta.env.VITE_API_URL || import.meta.env.VITE_BACKEND_URL || 'http://localhost:4000').replace(/\/+$/, '');
+// API Configuration
+const getApiBaseUrl = () => {
+  if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
+  if (import.meta.env.VITE_BACKEND_URL) return import.meta.env.VITE_BACKEND_URL;
+
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    if (hostname !== 'localhost' && hostname !== '127.0.0.1' && hostname !== '') {
+      return 'https://musicon-fullstack.onrender.com';
+    }
+  }
+  return 'http://localhost:4000';
+};
+
+export const API_BASE_URL = getApiBaseUrl().replace(/\/+$/, '');
 
 // API endpoints
 export const API_ENDPOINTS = {
