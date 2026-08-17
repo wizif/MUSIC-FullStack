@@ -11,7 +11,7 @@ export const DEFAULT_VALUES = {
 };
 
 // API Configuration
-export const API_BASE_URL = (import.meta.env.VITE_API_URL || import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000').replace(/\/+$/, '');
+export const API_BASE_URL = (import.meta.env.VITE_API_URL || import.meta.env.VITE_BACKEND_URL || 'http://localhost:4000').replace(/\/+$/, '');
 
 // API endpoints
 export const API_ENDPOINTS = {
