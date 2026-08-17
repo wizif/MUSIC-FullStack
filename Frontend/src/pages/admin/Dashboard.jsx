@@ -17,6 +17,7 @@ import { usePlayer } from '../../context/PlayerContext.jsx';
 import LoadingSpinner from '../../components/shared/LoadingSpinner.jsx';
 import api from '../../utils/api.js';
 import BorderGlow from '../../components/shared/BorderGlow.jsx';
+import GlitchText from '../../components/shared/GlitchText.jsx';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -121,7 +122,9 @@ const Dashboard = () => {
       <div>
         <h1 className="text-3xl font-extrabold text-white tracking-tight flex items-center gap-2">
           <Activity className="w-8 h-8 text-green-500" />
-          Admin Overview Dashboard
+          <GlitchText speed={0.8} enableShadows={true} enableOnHover={true}>
+            Admin Overview Dashboard
+          </GlitchText>
         </h1>
         <p className="text-gray-400 text-sm mt-1">Real-time system statistics and member publishing activities.</p>
       </div>

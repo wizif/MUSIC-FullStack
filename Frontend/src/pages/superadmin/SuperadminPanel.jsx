@@ -4,6 +4,7 @@ import axios from 'axios';
 import { API_BASE_URL } from '../../utils/constants.js';
 import LoadingSpinner from '../../components/shared/LoadingSpinner.jsx';
 import Scanner from '../../components/shared/Scanner.jsx';
+import GlitchText from '../../components/shared/GlitchText.jsx';
 
 const SuperadminPanel = () => {
   const [users, setUsers] = useState([]);
@@ -123,7 +124,11 @@ const SuperadminPanel = () => {
               <Sparkles className="w-5 h-5 text-purple-400" />
               <span className="text-xs font-bold tracking-widest text-purple-400 uppercase">Super Admin Panel</span>
             </div>
-            <h1 className="text-3xl font-extrabold text-white tracking-tight">Access Control & Role Registry</h1>
+            <h1 className="text-3xl font-extrabold text-white tracking-tight">
+              <GlitchText speed={0.8} enableShadows={true} enableOnHover={true}>
+                Access Control & Role Registry
+              </GlitchText>
+            </h1>
             <p className="text-gray-400 text-sm mt-0.5">Manage administrative access keys and promote or demote platform managers.</p>
           </div>
 

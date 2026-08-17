@@ -6,6 +6,7 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import Navbar from '../../components/user/Navbar.jsx';
 import AlbumItem from '../../components/shared/AlbumItem.jsx';
 import BorderGlow from '../../components/shared/BorderGlow.jsx';
+import GlitchText from '../../components/shared/GlitchText.jsx';
 import { fetchSoundCloudDiscovery } from '../../utils/soundcloudApi.js';
 
 /* ────────────────────────────────────────────────
@@ -345,7 +346,9 @@ const DisplayHome = () => {
         {/* ── Welcome header ── */}
         <div className="pt-2">
           <h1 className="text-3xl font-extrabold text-white tracking-tight">
-            {greeting()}{user?.name ? `, ${user.name.split(' ')[0]}` : ''}
+            <GlitchText speed={0.8} enableShadows={true} enableOnHover={true}>
+              {`${greeting()}${user?.name ? `, ${user.name.split(' ')[0]}` : ''}`}
+            </GlitchText>
           </h1>
           <p className="text-gray-500 text-sm mt-1">Discover what everyone's uploading</p>
         </div>
