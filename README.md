@@ -5,14 +5,18 @@
 [![Node.js](https://img.shields.io/badge/Backend-Node.js_Express-339933?style=for-the-badge&logo=nodedotjs)](https://nodejs.org/)
 [![MongoDB](https://img.shields.io/badge/Database-MongoDB-47A248?style=for-the-badge&logo=mongodb)](https://www.mongodb.com/)
 [![Cloudinary](https://img.shields.io/badge/Storage-Cloudinary-3448C5?style=for-the-badge&logo=cloudinary)](https://cloudinary.com/)
+[![Live Demo](https://img.shields.io/badge/Live_Demo-musicon--arv1.vercel.app-000000?style=for-the-badge&logo=vercel)](https://musicon-arv1.vercel.app/)
 
 **MusicOn** is a modern, full-stack music streaming platform inspired by Spotify and SoundCloud. Built with a sleek dark-mode aesthetic, it features real-time audio playback, interactive UI components, user playlist management, SoundCloud chart streaming, administrative upload controls, and role-based access control (RBAC).
 
 ---
 
 ## 🚀 Live Links
-- **Frontend App**: [MusicOn Platform](https://music-on-wisemen.vercel.app)
+- **Frontend App**: [https://musicon-arv1.vercel.app](https://musicon-arv1.vercel.app/)
 - **Backend API**: [MusicOn API Engine](https://musicon-fullstack.onrender.com)
+- **Source Code**: [github.com/wizif/MUSIC-FullStack](https://github.com/wizif/MUSIC-FullStack)
+
+> ⚠️ The backend runs on Render's free tier and sleeps after inactivity — the first request may take ~30 seconds to wake up.
 
 ---
 
@@ -100,7 +104,16 @@
 
 ---
 
-### 2. Backend Setup
+### 2. Clone the Repository
+
+```bash
+git clone https://github.com/wizif/MUSIC-FullStack.git
+cd MUSIC-FullStack
+```
+
+---
+
+### 3. Backend Setup
 
 ```bash
 # Navigate to Backend directory
@@ -131,7 +144,7 @@ npm run server
 
 ---
 
-### 3. Frontend Setup
+### 4. Frontend Setup
 
 ```bash
 # Navigate to Frontend directory
@@ -157,7 +170,7 @@ npm run dev
 ## 📁 Repository Structure
 
 ```
-Spotify full stack/
+MUSIC-FullStack/
 ├── Backend/
 │   ├── src/
 │   │   ├── config/         # Database & Cloudinary config
