@@ -9,7 +9,7 @@ const connectDB = async () => {
     });
 
     mongoose.connection.on("error", (error) => {
-      console.error("❌ MongoDB connection error:", error);
+      console.error("❌ MongoDB connection error:", error.message);
     });
 
     mongoose.connection.on("disconnected", () => {
@@ -18,15 +18,17 @@ const connectDB = async () => {
 
     // Check if MONGODB_URI exists
     if (!process.env.MONGODB_URI) {
-      throw new Error("MONGODB_URI environment variable is not set");
+      console.warn("⚠️ MONGODB_URI environment variable is not set in Backend/.env");
+      return;
     }
 
     console.log("🔗 Attempting to connect to MongoDB...");
     console.log("Database URL:", process.env.MONGODB_URI ? "✅ Set" : "❌ Not set");
     
-    // ✅ FIXED: Use the URI directly without appending /spotify
-    // Since your MONGODB_URI already includes the database name
-    await mongoose.connect(process.env.MONGODB_URI);
+    // Connect with 5-second timeout to avoid 30s buffering hangs
+    await mongoose.connect(process.env.MONGODB_URI, {
+      serverSelectionTimeoutMS: 5000,
+    });
 
     console.log("🎉 MongoDB connection established successfully");
     
@@ -40,8 +42,9 @@ const connectDB = async () => {
   } catch (error) {
     console.error("❌ MongoDB connection failed:");
     console.error("Error message:", error.message);
-    console.error("Stack trace:", error.stack);
-    process.exit(1); // Exit the process if database connection fails
+    if (error.message.includes("ENOTFOUND")) {
+      console.error("👉 Reason: The MongoDB cluster domain does not exist or cannot be resolved. Check if your MongoDB Atlas cluster is paused, deleted, or if the connection string in Backend/.env has a typo.");
+    }
   }
 };
 
