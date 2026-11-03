@@ -1,6 +1,16 @@
 import axios from 'axios';
 import { API_BASE_URL, API_ENDPOINTS } from './constants.js';
 
+console.log('🌐 Backend API Base URL configured:', API_BASE_URL);
+
+// Helper to get full URL for logging
+const getFullUrl = (config) => {
+  const base = (config?.baseURL || API_BASE_URL || '').replace(/\/+$/, '');
+  const path = config?.url || '';
+  if (path.startsWith('http://') || path.startsWith('https://')) return path;
+  return `${base}${path.startsWith('/') ? path : '/' + path}`;
+};
+
 // Create axios instance
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -17,11 +27,12 @@ api.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    console.log(`📤 API Request: ${config.method?.toUpperCase()} ${config.url}`);
+    const fullUrl = getFullUrl(config);
+    console.log(`📤 [API Request] ${config.method?.toUpperCase()} ${fullUrl}`);
     return config;
   },
   (error) => {
-    console.error('❌ Request Error:', error);
+    console.error('❌ [API Request Config Error]:', error.message || error);
     return Promise.reject(error);
   }
 );
@@ -29,11 +40,33 @@ api.interceptors.request.use(
 // Response interceptor
 api.interceptors.response.use(
   (response) => {
-    console.log(`✅ API Response: ${response.status} ${response.config.url}`);
+    const fullUrl = getFullUrl(response.config);
+    console.log(`✅ [API Response ${response.status}] ${response.config.method?.toUpperCase()} ${fullUrl}`);
     return response;
   },
   (error) => {
-    console.error('❌ Response Error:', error.response?.status, error.response?.data || error.message);
+    const fullUrl = getFullUrl(error.config);
+    const method = error.config?.method?.toUpperCase() || 'REQUEST';
+
+    if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+      console.error(
+        `❌ [API Timeout (30s)] ${method} ${fullUrl}\n` +
+        `   ➤ The backend server took longer than 30 seconds to respond.\n` +
+        `   ➤ If Render free tier: The service is asleep or cold-starting (takes 50-90s).\n` +
+        `   ➤ If Localhost: The backend server is not running on port 4000.`
+      );
+    } else if (error.response) {
+      const errorMsg = error.response.data?.message || JSON.stringify(error.response.data) || error.message;
+      console.error(`❌ [API Error HTTP ${error.response.status}] ${method} ${fullUrl}:`, errorMsg);
+    } else if (error.request) {
+      console.error(
+        `❌ [Network Connection Failed] ${method} ${fullUrl}\n` +
+        `   ➤ Cannot reach backend server. Check if backend is running or blocked by CORS.`
+      );
+    } else {
+      console.error(`❌ [API Error] ${method} ${fullUrl}:`, error.message);
+    }
+
     return Promise.reject(error);
   }
 );
@@ -46,7 +79,8 @@ export const songAPI = {
       const response = await api.get(API_ENDPOINTS.SONGS.LIST);
       return response.data;
     } catch (error) {
-      throw new Error(error.response?.data?.message || 'Failed to fetch songs');
+      const detailedMessage = error.response?.data?.message || (error.code === 'ECONNABORTED' ? 'Connection timed out (backend not responding)' : error.message) || 'Failed to fetch songs';
+      throw new Error(detailedMessage);
     }
   },
 
@@ -56,7 +90,8 @@ export const songAPI = {
       const response = await api.get(API_ENDPOINTS.SONGS.MINE);
       return response.data;
     } catch (error) {
-      throw new Error(error.response?.data?.message || 'Failed to fetch your songs');
+      const detailedMessage = error.response?.data?.message || (error.code === 'ECONNABORTED' ? 'Connection timed out (backend not responding)' : error.message) || 'Failed to fetch your songs';
+      throw new Error(detailedMessage);
     }
   },
 
@@ -83,7 +118,8 @@ export const songAPI = {
       
       return response.data;
     } catch (error) {
-      throw new Error(error.response?.data?.message || 'Failed to add song');
+      const detailedMessage = error.response?.data?.message || (error.code === 'ECONNABORTED' ? 'Connection timed out (backend not responding)' : error.message) || 'Failed to add song';
+      throw new Error(detailedMessage);
     }
   },
 
@@ -93,7 +129,8 @@ export const songAPI = {
       const response = await api.post(API_ENDPOINTS.SONGS.REMOVE, { id: songId });
       return response.data;
     } catch (error) {
-      throw new Error(error.response?.data?.message || 'Failed to remove song');
+      const detailedMessage = error.response?.data?.message || (error.code === 'ECONNABORTED' ? 'Connection timed out (backend not responding)' : error.message) || 'Failed to remove song';
+      throw new Error(detailedMessage);
     }
   }
 };
@@ -106,7 +143,8 @@ export const albumAPI = {
       const response = await api.get(API_ENDPOINTS.ALBUMS.LIST);
       return response.data;
     } catch (error) {
-      throw new Error(error.response?.data?.message || 'Failed to fetch albums');
+      const detailedMessage = error.response?.data?.message || (error.code === 'ECONNABORTED' ? 'Connection timed out (backend not responding)' : error.message) || 'Failed to fetch albums';
+      throw new Error(detailedMessage);
     }
   },
 
@@ -116,7 +154,8 @@ export const albumAPI = {
       const response = await api.get(API_ENDPOINTS.ALBUMS.GET_SONGS(albumId));
       return response.data;
     } catch (error) {
-      throw new Error(error.response?.data?.message || 'Failed to fetch album songs');
+      const detailedMessage = error.response?.data?.message || (error.code === 'ECONNABORTED' ? 'Connection timed out (backend not responding)' : error.message) || 'Failed to fetch album songs';
+      throw new Error(detailedMessage);
     }
   },
 
@@ -140,7 +179,8 @@ export const albumAPI = {
       
       return response.data;
     } catch (error) {
-      throw new Error(error.response?.data?.message || 'Failed to add album');
+      const detailedMessage = error.response?.data?.message || (error.code === 'ECONNABORTED' ? 'Connection timed out (backend not responding)' : error.message) || 'Failed to add album';
+      throw new Error(detailedMessage);
     }
   },
 
@@ -150,7 +190,8 @@ export const albumAPI = {
       const response = await api.post(API_ENDPOINTS.ALBUMS.REMOVE, { id: albumId });
       return response.data;
     } catch (error) {
-      throw new Error(error.response?.data?.message || 'Failed to remove album');
+      const detailedMessage = error.response?.data?.message || (error.code === 'ECONNABORTED' ? 'Connection timed out (backend not responding)' : error.message) || 'Failed to remove album';
+      throw new Error(detailedMessage);
     }
   }
 };
@@ -162,7 +203,8 @@ export const playlistAPI = {
       const response = await api.get('/api/playlist');
       return response.data;
     } catch (error) {
-      throw new Error(error.response?.data?.message || 'Failed to fetch playlists');
+      const detailedMessage = error.response?.data?.message || (error.code === 'ECONNABORTED' ? 'Connection timed out (backend not responding)' : error.message) || 'Failed to fetch playlists';
+      throw new Error(detailedMessage);
     }
   },
   create: async (name, isPrivate = true) => {
@@ -170,7 +212,8 @@ export const playlistAPI = {
       const response = await api.post('/api/playlist/create', { name, isPrivate });
       return response.data;
     } catch (error) {
-      throw new Error(error.response?.data?.message || 'Failed to create playlist');
+      const detailedMessage = error.response?.data?.message || (error.code === 'ECONNABORTED' ? 'Connection timed out (backend not responding)' : error.message) || 'Failed to create playlist';
+      throw new Error(detailedMessage);
     }
   },
   addSong: async (playlistId, song) => {
@@ -178,7 +221,8 @@ export const playlistAPI = {
       const response = await api.post(`/api/playlist/${playlistId}/add`, { song });
       return response.data;
     } catch (error) {
-      throw new Error(error.response?.data?.message || 'Failed to add song to playlist');
+      const detailedMessage = error.response?.data?.message || (error.code === 'ECONNABORTED' ? 'Connection timed out (backend not responding)' : error.message) || 'Failed to add song to playlist';
+      throw new Error(detailedMessage);
     }
   },
   removeSong: async (playlistId, songId) => {
@@ -186,7 +230,8 @@ export const playlistAPI = {
       const response = await api.post(`/api/playlist/${playlistId}/remove`, { songId });
       return response.data;
     } catch (error) {
-      throw new Error(error.response?.data?.message || 'Failed to remove song from playlist');
+      const detailedMessage = error.response?.data?.message || (error.code === 'ECONNABORTED' ? 'Connection timed out (backend not responding)' : error.message) || 'Failed to remove song from playlist';
+      throw new Error(detailedMessage);
     }
   },
   getOne: async (playlistId) => {
@@ -194,7 +239,8 @@ export const playlistAPI = {
       const response = await api.get(`/api/playlist/${playlistId}`);
       return response.data;
     } catch (error) {
-      throw new Error(error.response?.data?.message || 'Failed to fetch playlist');
+      const detailedMessage = error.response?.data?.message || (error.code === 'ECONNABORTED' ? 'Connection timed out (backend not responding)' : error.message) || 'Failed to fetch playlist';
+      throw new Error(detailedMessage);
     }
   },
   delete: async (playlistId) => {
@@ -202,7 +248,8 @@ export const playlistAPI = {
       const response = await api.delete(`/api/playlist/${playlistId}`);
       return response.data;
     } catch (error) {
-      throw new Error(error.response?.data?.message || 'Failed to delete playlist');
+      const detailedMessage = error.response?.data?.message || (error.code === 'ECONNABORTED' ? 'Connection timed out (backend not responding)' : error.message) || 'Failed to delete playlist';
+      throw new Error(detailedMessage);
     }
   }
 };
