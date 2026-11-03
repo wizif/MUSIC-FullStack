@@ -30,7 +30,8 @@ export const AuthProvider = ({ children }) => {
             throw new Error('Verification failed');
           }
         } catch (err) {
-          console.error('❌ Session verification failed. Clearing credentials:', err.message);
+          const errMsg = err.response?.data?.message || (err.code === 'ECONNABORTED' ? 'Session check timed out' : err.message);
+          console.error('❌ Session verification failed. Clearing credentials:', errMsg);
           localStorage.removeItem('sc_token');
           setUser(null);
         }
@@ -44,7 +45,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (email, password) => {
-    console.log('🔐 Real login attempt started...');
+    console.log('🔐 Real login attempt started for:', email);
     setError(null);
     try {
       const response = await api.post('/api/auth/login', { email, password });
@@ -59,7 +60,16 @@ export const AuthProvider = ({ children }) => {
         throw new Error(response.data?.message || 'Login failed');
       }
     } catch (err) {
-      const errMsg = err.response?.data?.message || err.message || 'Login failed';
+      let errMsg = err.response?.data?.message;
+      if (!errMsg) {
+        if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
+          errMsg = 'Connection timed out (backend took >30s). Server may be sleeping or down.';
+        } else if (!err.response && err.request) {
+          errMsg = 'Cannot connect to backend server. Make sure it is running.';
+        } else {
+          errMsg = err.message || 'Login failed';
+        }
+      }
       console.error('❌ Login failed:', errMsg);
       setError(errMsg);
       return { success: false, error: errMsg };
@@ -67,7 +77,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const register = async (name, email, password) => {
-    console.log('📝 Registration attempt started...');
+    console.log('📝 Registration attempt started for:', email);
     setError(null);
     try {
       const response = await api.post('/api/auth/register', { name, email, password });
@@ -82,7 +92,16 @@ export const AuthProvider = ({ children }) => {
         throw new Error(response.data?.message || 'Registration failed');
       }
     } catch (err) {
-      const errMsg = err.response?.data?.message || err.message || 'Registration failed';
+      let errMsg = err.response?.data?.message;
+      if (!errMsg) {
+        if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
+          errMsg = 'Connection timed out (backend took >30s). Server may be sleeping or down.';
+        } else if (!err.response && err.request) {
+          errMsg = 'Cannot connect to backend server. Make sure it is running.';
+        } else {
+          errMsg = err.message || 'Registration failed';
+        }
+      }
       console.error('❌ Registration failed:', errMsg);
       setError(errMsg);
       return { success: false, error: errMsg };
