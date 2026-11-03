@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import mongoose from "mongoose";
 import "dotenv/config";
 import songRouter from "./src/routes/songRoute.js";
 import connectDB from "./src/config/mongodb.js";
@@ -36,6 +37,26 @@ app.use(cors({
 
 // middleware
 app.use(express.json());
+
+// Health check endpoint
+app.get("/", (req, res) => {
+  res.json({
+    status: "ok",
+    message: "Spotify API Server is running",
+    database: mongoose.connection.readyState === 1 ? "connected" : "disconnected"
+  });
+});
+
+// Guard API routes if database is disconnected so requests don't hang buffering
+app.use("/api", (req, res, next) => {
+  if (mongoose.connection.readyState !== 1) {
+    return res.status(503).json({
+      success: false,
+      message: "Database not connected. Please verify your MONGODB_URI in Backend/.env"
+    });
+  }
+  next();
+});
 
 // initializing the routes
 app.use("/api/song", songRouter);
